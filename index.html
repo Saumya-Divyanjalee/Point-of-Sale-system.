@@ -2,84 +2,405 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>POS</title>
-
+  <title>POS System</title>
   <meta name="keywords" content="HTML,CSS,JavaScript,Bootstrap,JQuery,POS,pos">
   <meta name="description" content="Simple Single Page POS Application using HTML, CSS, Javascript, JQuery and the bootstrap framework.">
   <meta name="author" content="Saumya Divyanjalee">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-
-  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="style/index.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
 
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 280px;
+      background-color: #0d6efd;               /* primary colour */
+      padding-top: 1rem;
+      overflow-y: auto;
+      z-index: 1030;
+    }
+    .sidebar .nav-link {
+      color: rgba(255,255,255,.9);
+      padding: .75rem 1.5rem;
+      border-radius: .25rem;
+      margin: .2rem .8rem;
+      display: flex;
+      align-items: center;
+    }
+    .sidebar .nav-link i {
+      margin-right: .6rem;
+      font-size: 1.1rem;
+    }
+    .sidebar .nav-link:hover,
+    .sidebar .nav-link.active {
+      background-color: rgba(255,255,255,.15);
+      color: #fff;
+    }
+    .sidebar .navbar-brand {
+      color: #fff;
+      font-weight: 600;
+      padding: .75rem 1.5rem;
+      font-size: 1.35rem;
+      display: flex;
+      align-items: center;
+    }
+    .sidebar .navbar-brand i {
+      margin-right: .5rem;
+    }
 
+    /* ---------- Main content ---------- */
+    .main-content {
+      margin-left: 280px;          /* same as sidebar width */
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    /* Section fade-in */
+    .section-container {
+      display: none;
+      animation: fadeIn .3s;
+    }
+    .section-container.active { display: block; }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+    /* Dashboard cards */
+    .dashboard-card {
+      transition: transform .3s;
+      cursor: pointer;
+      height: 100%;
+    }
+    .dashboard-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,.1);
+    }
+    .dashboard-card .card-body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    .dashboard-card i { font-size:3rem; margin-bottom:20px; }
+
+    /* Table containers */
+    .table-container {
+      background:#fff;
+      padding:20px;
+      border-radius:10px;
+      box-shadow:0 2px 10px rgba(0,0,0,.05);
+      margin-top:20px;
+    }
+  </style>
 </head>
 <body>
-<!-- Navigation Bar -->
-<nav class="navbar navbar-expand-lg navbar-custom">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#"><i class="bi bi-cart-check-fill"></i> POS System</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#" id="navDashboard">
-            <i class="bi bi-house-door"></i> Dashboard
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" id="navCustomer">
-            <i class="bi bi-people"></i> Customer
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" id="navItem">
-            <i class="bi bi-box-seam"></i> Items
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" id="navOrder">
-            <i class="bi bi-receipt"></i> Place Order
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" id="navOrderHistory">
-            <i class="bi bi-clock-history"></i> Order History
-          </a>
-        </li>
-      </ul>
-      <div class="d-flex align-items-center">
-                    <span class="navbar-text me-3">
-                        <i class="bi bi-person-circle"></i> Welcome, <span id="loggedUser">User</span>
-                    </span>
-        <button class="btn btn-logout btn-sm" type="button" id="btnLogout">
-          <i class="bi bi-box-arrow-right"></i> Logout
-        </button>
+
+<!-- ==================== SIDEBAR ==================== -->
+<nav class="sidebar">
+  <a class="navbar-brand" href="#"><i class="bi bi-shop"></i> POS System</a>
+  <ul class="nav flex-column mt-3">
+    <li class="nav-item">
+      <a class="nav-link active" href="#" data-section="dashboard">
+        <i class="bi bi-grid"></i> Dashboard
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#" data-section="customers">
+        <i class="bi bi-people"></i> Customers
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#" data-section="items">
+        <i class="bi bi-box"></i> Items
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#" data-section="orders">
+        <i class="bi bi-cart"></i> Place Order
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#" data-section="orderHistory">
+        <i class="bi bi-clock-history"></i> Order History
+      </a>
+    </li>
+  </ul>
+</nav>
+
+<!-- ==================== MAIN CONTENT ==================== -->
+<div class="main-content">
+
+  <!-- Dashboard Section -->
+  <section id="dashboard" class="section-container active">
+    <h2 class="mb-4">Dashboard</h2>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card dashboard-card bg-primary text-white" data-section="customers">
+          <div class="card-body">
+            <i class="bi bi-people"></i>
+            <h3 id="totalCustomers">0</h3>
+            <h5 class="card-title">Total Customers</h5>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card dashboard-card bg-success text-white" data-section="items">
+          <div class="card-body">
+            <i class="bi bi-box"></i>
+            <h3 id="totalItems">0</h3>
+            <h5 class="card-title">Total Items</h5>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card dashboard-card bg-info text-white" data-section="orderHistory">
+          <div class="card-body">
+            <i class="bi bi-cart-check"></i>
+            <h3 id="totalOrders">0</h3>
+            <h5 class="card-title">Total Orders</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Customer Management Section -->
+  <section id="customers" class="section-container">
+    <h2 class="mb-4">Manage Customers</h2>
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row g-3">
+          <input type="hidden" id="customerId">
+          <div class="col-md-3">
+            <label for="customerName" class="form-label">Customer Name</label>
+            <input type="text" class="form-control" id="customerName">
+          </div>
+          <div class="col-md-3">
+            <label for="customerContact" class="form-label">Contact Number</label>
+            <input type="tel" class="form-control" id="customerContact">
+          </div>
+          <div class="col-md-4">
+            <label for="customerAddress" class="form-label">Address</label>
+            <input type="text" class="form-control" id="customerAddress">
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="button" class="btn btn-primary w-100" id="saveCustomerBtn">
+              <i class="bi bi-save"></i> Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <h5>Customer List</h5>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+          <tr>
+            <th>ID</th><th>Name</th><th>Contact</th><th>Address</th><th>Actions</th>
+          </tr>
+          </thead>
+          <tbody id="customerTableBody">
+          <tr><td colspan="5" class="text-center text-muted">No customers found</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Item Management Section -->
+  <section id="items" class="section-container">
+    <h2 class="mb-4">Manage Items</h2>
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row g-3">
+          <input type="hidden" id="itemId">
+          <div class="col-md-2">
+            <label for="itemCode" class="form-label">Item Code</label>
+            <input type="text" class="form-control" id="itemCode">
+          </div>
+          <div class="col-md-3">
+            <label for="itemName" class="form-label">Item Name</label>
+            <input type="text" class="form-control" id="itemName">
+          </div>
+          <div class="col-md-2">
+            <label for="itemPrice" class="form-label">Unit Price (Rs)</label>
+            <input type="number" class="form-control" id="itemPrice" step="0.01">
+          </div>
+          <div class="col-md-2">
+            <label for="itemQty" class="form-label">Quantity</label>
+            <input type="number" class="form-control" id="itemQty">
+          </div>
+          <div class="col-md-3 d-flex align-items-end">
+            <button type="button" class="btn btn-primary w-100" id="saveItemBtn">
+              <i class="bi bi-save"></i> Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <h5>Item List</h5>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+          <tr><th>Code</th><th>Name</th><th>Price</th><th>Quantity</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="itemTableBody">
+          <tr><td colspan="5" class="text-center text-muted">No items found</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Place Order Section -->
+  <section id="orders" class="section-container">
+    <h2 class="mb-4">Place Order</h2>
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="orderCustomer" class="form-label">Select Customer</label>
+                <select class="form-select" id="orderCustomer"><option value="">Choose a customer...</option></select>
+              </div>
+              <div class="col-md-6">
+                <label for="orderDate" class="form-label">Order Date</label>
+                <input type="date" class="form-control" id="orderDate">
+              </div>
+              <div class="col-md-5">
+                <label for="orderItem" class="form-label">Select Item</label>
+                <select class="form-select" id="orderItem"><option value="">Choose an item...</option></select>
+              </div>
+              <div class="col-md-3">
+                <label for="orderQuantity" class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="orderQuantity" min="1" value="1">
+              </div>
+              <div class="col-md-4 d-flex align-items-end">
+                <button type="button" class="btn btn-success w-100" id="addItemBtn">
+                  <i class="bi bi-plus-circle"></i> Add to Order
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <h5>Order Items</h5>
+              <div id="orderItemsContainer"><p class="text-muted text-center py-3">No items added yet</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card sticky-top" style="top:20px;">
+          <div class="card-header bg-primary text-white"><h5 class="mb-0">Order Summary</h5></div>
+          <div class="card-body">
+            <div class="mb-3"><strong>Order ID:</strong> <span id="currentOrderId">-</span></div>
+            <div class="mb-3"><strong>Customer:</strong> <span id="summaryCustomer">Not selected</span></div>
+            <hr>
+            <div class="d-flex justify-content-between mb-2"><span>Subtotal:</span><strong id="orderSubtotal">Rs. 0.00</strong></div>
+            <div class="d-flex justify-content-between mb-3"><span>Discount (5%):</span><strong id="orderDiscount">Rs. 0.00</strong></div>
+            <hr>
+            <div class="d-flex justify-content-between mb-3"><h5>Total:</h5><h5 class="text-primary" id="orderTotal">Rs. 0.00</h5></div>
+            <button type="button" class="btn btn-primary w-100 mb-2" id="placeOrderBtn" disabled>
+              <i class="bi bi-check-circle"></i> Place Order
+            </button>
+            <button type="button" class="btn btn-outline-secondary w-100" id="clearOrderBtn">
+              <i class="bi bi-x-circle"></i> Clear Order
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Order History Section -->
+  <section id="orderHistory" class="section-container">
+    <h2 class="mb-4">Order History</h2>
+    <div class="table-container">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+          <tr><th>Order ID</th><th>Customer</th><th>Date</th><th>Items</th><th>Total</th><th>Action</th></tr>
+          </thead>
+          <tbody id="orderHistoryTableBody">
+          <tr><td colspan="6" class="text-center text-muted">No orders found</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div> <!-- /.main-content -->
+
+<!-- Order Details Modal (unchanged) -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Order Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="orderDetailsContent"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
-</nav>
-
-<!-- Main Content Area -->
-<div class="container-fluid mt-4">
-  <!-- Your page content sections will go here -->
 </div>
 
-<!-- jQuery (required for your assignment) -->
+<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Bootstrap JS Bundle (includes Popper) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script>
+  // ---------- Sidebar active state & section switching ----------
+  $(function () {
+    // Click on any sidebar link
+    $('.sidebar .nav-link').on('click', function (e) {
+      e.preventDefault();
 
-<!-- Your custom JavaScript -->
+      // Remove active class from all links
+      $('.sidebar .nav-link').removeClass('active');
+      // Add active to the clicked one
+      $(this).addClass('active');
+
+      // Hide all sections
+      $('.section-container').removeClass('active');
+
+      // Show the target section
+      const target = $(this).data('section');
+      $('#' + target).addClass('active');
+    });
+
+    // Dashboard cards also switch sections (your original behaviour)
+    $('.dashboard-card').on('click', function () {
+      const target = $(this).data('section');
+      $('.sidebar .nav-link').removeClass('active');
+      $('.sidebar .nav-link[data-section="' + target + '"]').addClass('active');
+      $('.section-container').removeClass('active');
+      $('#' + target).addClass('active');
+    });
+  });
+</script>
+
+<!-- Your existing script.js (keep it at the bottom) -->
 <script src="js/script.js"></script>
 </body>
 </html>
