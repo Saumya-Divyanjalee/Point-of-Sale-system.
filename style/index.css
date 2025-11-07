@@ -13,7 +13,7 @@ body {
     left: 0;
     height: 100vh;
     width: 280px;
-    background-color: #0d6efd;               /* primary colour */
+    background-color: darkblue;               /* primary colour */
     padding-top: 1rem;
     overflow-y: auto;
     z-index: 1030;
