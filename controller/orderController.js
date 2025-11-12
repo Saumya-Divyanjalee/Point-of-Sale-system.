@@ -1,200 +1,196 @@
-import {customers_array, item_array,order_array} from "../db/database.js";
-import OrderModel from "../model/orderModel.js";
-import OrderItemModel from "../model/orderItemModel.js";
-import {setTotalValues,loadAllOrders} from "./dashboardController.js";
-import {loadItemData} from "./itemController.js";
-import {PRICE, QTY} from "../util/regex.js";
-import {setAlert} from "../util/alert.js";
+// controller/OrderController.js
+import { OrderModel } from '../model/OrderModel.js';
+import { ItemModel } from '../model/ItemModel.js';
 
-let orderId = $("#inputOrderId");
-let customerId = $("#inputCustomerId");
-let customerName = $("#inputCustomerName");
-let inputDate = $("#inputDate");
-let inventoryIdDropDown = $("#inputInventoryId");
-let inventoryModel = $("#inputOrderModel");
-let inventoryPrice = $("#inputOrderPrice");
-let onHandQty = $("#inputOnHandQty");
-let orderQty = $("#inputOrderQty");
-let addBtn = $("#addBtn");
-let orderDetailTblBody = $("#orderDetailTblBody");
-let inputTotal = $("#inputTotal");
+export class OrderController {
+    constructor(itemController) {
+        this.itemController = itemController;
+        this.cart = [];
+        this.historyTableBody = document.getElementById('historyTable');
 
-// set date
-const date = new Date();
-const formattedDate = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
-inputDate.val(formattedDate);
+        this.cartItemsContainer = document.getElementById('cartItems');
+        this.orderTotalEl = document.getElementById('orderTotal');
+        this.cartBadge = document.getElementById('cartBadge');
+        this.placeOrderBtn = document.getElementById('placeOrderBtn');
 
-//set order ID
-let setOrderID = () => {
-    if (order_array.length === 0){
-        orderId.val(1);
-    } else {
-        console.log(parseInt(order_array[order_array.length - 1].orderId) + 1)
-        orderId.val(order_array[order_array.length - 1].orderId + 1);
+        this.setupListeners();
+        this.updateCartDisplay();
     }
-}
-setOrderID();
 
-// set total
-function setTotal(){
-    const lastColumnData = [];
-    $('#orderDetailTblBody tr').each(function() {
-        //lastColumnData.splice(0, lastColumnData.length);
-        const totalCell = $(this).find('td:nth-child(5)');
-        lastColumnData.push(totalCell.text());
-    });
-
-    let total = 0;
-    lastColumnData.map(value => {
-        total += parseFloat(value);
-    });
-    inputTotal.val(total);
-}
-
-// add button action
-addBtn.on("click", function() {
-    if (QTY.test(orderQty.val())){
-        let data = `<tr><td>${inventoryIdDropDown.text()}</td><td>${inventoryModel.val()}</td><td>${inventoryPrice.val()}</td><td>${orderQty.val()}</td><td>${parseFloat(inventoryPrice.val()) * parseInt(orderQty.val()).toFixed(2)}</td><td><button class="btn btn-danger btn-sm delete-btn">Delete</button></td></tr>`;
-        orderDetailTblBody.append(data);
-        setTotal();
-        inventoryIdDropDown.text("Inventory ID");
-        inventoryModel.val("");
-        inventoryPrice.val("");
-        onHandQty.val("");
-        orderQty.val("");
-    } else {
-        setAlert('error','Invalid Order Quantity !!');
+    setupListeners() {
+        document.querySelector('.order-card .btn-clear').onclick = () => this.clearCart();
     }
-});
 
-// Event delegation for delete button
-orderDetailTblBody.on('click', '.delete-btn', function() {
-    let row = $(this).closest('tr');
-    setAlert('warning','Do you want to remove this order item?',row);
-});
-
-// customer id eka click kla wita button eke text eka set wenw
-$("#customerIds").on("click", "li", function() {
-    const selectId = $(this);
-    customerId.text(selectId.text());
-    customerName.val(customers_array[selectId.text()-1].name); // meka hriynne na
-});
-
-// item id eka click kla wita button eke text eka set wenw
-$("#itemIds").on("click", "li", function() {
-    const selectId = $(this);
-    inventoryIdDropDown.text(selectId.text());  // meka hriynne na
-    inventoryModel.val(item_array[selectId.text()-1].model);
-    inventoryPrice.val(item_array[selectId.text()-1].price);
-    onHandQty.val(item_array[selectId.text()-1].qty);
-});
-
-export let setDataDropdowns = () => {
-    // customer ids tika dropdown ekt set wenw
-    $("#customerIds").empty();
-    customers_array.forEach((value,index) => {
-        console.log("value.customer_id");
-        let data = `<li>${value.customer_id}</li>`;
-        $("#customerIds").append(data);
-    });
-    console.log(customers_array);
-
-    // item ids tika dropdown ekt set wenw
-    $("#itemIds").empty();
-    item_array.map((value,index) => {
-        let data = `<li>${value.item_id}</li>`;
-        $("#itemIds").append(data);
-    });
-}
-
-setDataDropdowns();
-
-// discount input enter action
-let subTotal = 0;
-$('#inputDiscount').on('keydown', function(event) {
-    if (event.key === 'Enter' || event.keyCode === 13) {
-        // Action to perform when Enter is pressed
-        let discountValue = $('#inputDiscount').val();
-        if (discountValue.slice(-1) === '%') {
-            discountValue = discountValue.slice(0, -1);
-            subTotal = parseFloat(inputTotal.val()) - (parseFloat(inputTotal.val()) * parseFloat(discountValue) / 100);
-            $("#inputSubTotal").val(subTotal.toFixed(2));
-        } else {
-            subTotal = parseFloat(inputTotal.val()) - parseFloat(discountValue);
-            $("#inputSubTotal").val(subTotal.toFixed(2));
+    // Cart / POS Logic
+    addToCart(itemId) {
+        const item = ItemModel.getById(itemId);
+        if (!item || item.stock <= 0) {
+            alert('Item is out of stock.');
+            return;
         }
 
-    }
-});
-
-// set balance cash input enter action
-$('#inputCash').on('keydown', function(event) {
-    if (event.key === 'Enter' || event.keyCode === 13) {
-        if (PRICE.test($('#inputCash').val())){
-            $("#inputBalance").val((parseFloat($('#inputCash').val()) - parseFloat($("#inputSubTotal").val())).toFixed(2));
-        } else {
-            setAlert('error','Invalid Cash Price !!');
-        }
-    }
-});
-
-// place order button action
-$("#place-order-btn").on("click", function() {
-    if ($("#inputSubTotal").val() !== ""){
-        saveOrder();
-        setOrderID();
-        clearFrom();
-        setTotalValues();
-        loadAllOrders();
-        loadItemData();
-        setAlert('success','Order Placed Successfully!!');
-    }
-});
-
-// set order
-let saveOrder = () => {
-    let orderItems = [];
-    $('#orderDetailTblBody tr').each(function() {
-        // Get the Inventory ID and Quantity for each row
-        let itemId = $(this).find('td').eq(0).text();  // First column (Inventory ID)
-        let quantity = $(this).find('td').eq(3).text();      // Fourth column (Quantity)
-
-        item_array.map((value,index) => {
-            if (value.item_id === itemId){
-                value.qty -= quantity;
+        const existing = this.cart.find(c => c.item.id === itemId);
+        if (existing) {
+            if (existing.quantity >= item.stock) {
+                alert('Not enough stock!');
+                return;
             }
+            existing.quantity++;
+        } else {
+            // Push a reference to the item data structure (ItemDTO)
+            this.cart.push({ item, quantity: 1 });
+        }
+
+        this.updateCartDisplay();
+    }
+
+    removeFromCart(index) {
+        this.cart.splice(index, 1);
+        this.updateCartDisplay();
+    }
+
+    clearCart() {
+        this.cart = [];
+        this.updateCartDisplay();
+    }
+
+    updateCartDisplay() {
+        if (this.cart.length === 0) {
+            this.cartItemsContainer.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                    <p>No items in cart</p>
+                </div>
+            `;
+            this.orderTotalEl.textContent = 'LKR 0.00';
+            this.cartBadge.textContent = '0';
+            this.placeOrderBtn.disabled = true;
+            return;
+        }
+
+        let total = 0;
+        this.cartItemsContainer.innerHTML = '';
+
+        this.cart.forEach((entry, index) => {
+            const itemTotal = entry.item.price * entry.quantity;
+            total += itemTotal;
+
+            const div = document.createElement('div');
+            div.className = 'cart-item';
+            div.innerHTML = `
+                <div>
+                    <div class="cart-item-name">${entry.item.name}</div>
+                    <div class="cart-item-qty">x${entry.quantity}</div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="cart-item-price">LKR ${itemTotal.toFixed(2)}</span>
+                    <button class="cart-item-remove ms-2" onclick="orderController.removeFromCart(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            this.cartItemsContainer.appendChild(div);
         });
 
-        const orderItemModel = new OrderItemModel(parseInt(itemId),parseInt(quantity));
-        orderItems.push(orderItemModel);
-    });
-    const order = new OrderModel(parseInt(orderId.val()),parseInt(customerId.text()),inputDate.val(),parseFloat($("#inputSubTotal").val()),orderItems);
-    order_array.push(order);
-    console.log(order_array);
+        this.orderTotalEl.textContent = `LKR ${total.toFixed(2)}`;
+        this.cartBadge.textContent = this.cart.reduce((sum, c) => sum + c.quantity, 0);
+        this.placeOrderBtn.disabled = false;
+    }
+
+    placeOrder() {
+        if (this.cart.length === 0) return;
+
+        // 1. Deduct stock and update ItemModel
+        let items = ItemModel.getAll();
+
+        // Final stock check and deduction
+        for (let entry of this.cart) {
+            const itemIndex = items.findIndex(i => i.id === entry.item.id);
+            if (itemIndex !== -1) {
+                if (entry.quantity > items[itemIndex].stock) {
+                    alert(`Not enough stock for ${entry.item.name}. Available: ${items[itemIndex].stock}`);
+                    return;
+                }
+                items[itemIndex].stock -= entry.quantity;
+            }
+        }
+        ItemModel.saveAll(items); // Save updated stock
+
+        // 2. Create and save order
+        const customerId = document.getElementById('customerSelect').value || null;
+        const newOrder = OrderModel.create(customerId, this.cart);
+
+        alert(`Order ${newOrder.id} placed successfully! Total: LKR ${newOrder.total.toFixed(2)}`);
+
+        // 3. Reset POS and refresh affected views
+        this.cart = [];
+        this.updateCartDisplay();
+        window.app.loadPOS(); // Reload POS menu to reflect new stock
+        window.app.updateDashboardStats(); // Refresh dashboard stats and recent orders
+    }
+
+    // History Logic
+    loadOrderHistory() {
+        const orders = OrderModel.getAll();
+        orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        this.historyTableBody.innerHTML = '';
+
+        if (orders.length === 0) {
+            this.historyTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No orders found</td></tr>';
+            return;
+        }
+
+        orders.forEach(order => {
+            const customer = window.app.customerController.getAllCustomers().find(c => c.id === order.customerId);
+            const date = new Date(order.date);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${order.id}</strong></td>
+                <td>${date.toLocaleString()}</td>
+                <td>${customer ? customer.name : 'Walk-in'}</td>
+                <td>${order.items.length} item${order.items.length > 1 ? 's' : ''}</td>
+                <td><strong>LKR ${order.total.toFixed(2)}</strong></td>
+                <td><span class="badge ${order.status === 'Paid' ? 'badge-paid' : 'badge-unpaid'}">${order.status}</span></td>
+                <td>
+                    <button class="btn btn-sm" style="background: var(--secondary); color: white;" onclick="orderController.viewOrder('${order.id}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            `;
+            this.historyTableBody.appendChild(tr);
+        });
+        window.app.updateDashboardOrdersCount(orders.length);
+    }
+
+    viewOrder(orderId) {
+        const order = OrderModel.getById(orderId);
+        if (!order) return;
+
+        let items = '';
+        order.items.forEach(item => {
+            const menuItem = this.itemController.getAllItems().find(m => m.id === item.itemId);
+            items += `${menuItem ? menuItem.name : 'Unknown'} x${item.quantity} - LKR ${(item.price * item.quantity).toFixed(2)}\n`;
+        });
+
+        const customer = window.app.customerController.getAllCustomers().find(c => c.id === order.customerId);
+        alert(`
+Order Details - ${order.id}
+Date: ${new Date(order.date).toLocaleString()}
+Customer: ${customer ? customer.name : 'Walk-in'}
+
+Items:
+${items}
+Total: LKR ${order.total.toFixed(2)}
+Status: ${order.status}
+        `.trim());
+    }
+
+    getAllOrders() {
+        return OrderModel.getAll();
+    }
+
+    getOrdersByCustomerId(customerId) {
+        return OrderModel.getAll().filter(o => o.customerId === customerId);
+    }
 }
-
-//set clear form
-let clearFrom = () => {
-    customerId.text("Customer ID");
-    customerName.val("");
-    inventoryIdDropDown.text("Inventory ID");
-    inventoryModel.val("");
-    inventoryPrice.val("");
-    onHandQty.val("");
-    orderQty.val("");
-    orderDetailTblBody.children().remove();
-    inputTotal.val("");
-    $('#inputDiscount').val("");
-    $("#inputSubTotal").val("");
-    $('#inputCash').val("");
-    $("#inputBalance").val("");
-}
-
-$("#clear-btn").on('click',function (){
-    clearFrom();
-});
-
-$("#new-btn").on('click', function (){
-    clearFrom();
-    setOrderID();
-})

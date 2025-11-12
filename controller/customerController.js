@@ -1,174 +1,139 @@
-import CustomerModel from "../model/customerModel.js";
-import {customers_array} from "../db/database.js";
-import {setDataDropdowns} from "./orderController.js"
-import {loadAllOrders, setTotalValues} from "./dashboardController.js";
-import {NAME, NIC, EMAIL, TEL, QTY} from "../util/regex.js";
-import {setAlert} from "../util/alert.js";
+// controller/CustomerController.js
+import { CustomerModel } from '../model/CustomerModel.js';
+import { CustomerDTO } from '../dto/CustomerDTO.js';
 
-let cusBody = $("#customer-tbl-body");
-let cusId = $("#inputId");
-let cusName = $("#inputName");
-let cusAddress = $("#inputAddress");
-let cusNic = $("#inputNic");
-let cusEmail = $("#inputEmail");
-let cusTel = $("#inputTel");
+export class CustomerController {
+    constructor() {
+        this.editingCustomerId = null;
+        this.customersTableBody = document.getElementById('customersTable');
+        this.updateCustomerBtn = document.getElementById('updateCustomerBtn');
+        this.deleteCustomerBtn = document.getElementById('deleteCustomerBtn');
 
-// save button action
-$("#customer-save").on("click", function() {
-    if (validationCustomerInput()){
-        const customer = new CustomerModel(cusId.val(),cusName.val(),cusAddress.val(),cusNic.val(),cusEmail.val(),cusTel.val())
-        customers_array.push(customer);
-        loadCustomerData();
-        clearCustomerInputs();
-        setDataDropdowns();
-        setCustomerID();
-        setTotalValues();
-        setAlert('success','Customer Saved Successfully!!');
+        this.setupFormListeners();
     }
-});
 
-// set Customer ID
-let setCustomerID = () => {
-    if (customers_array.length === 0) {
-        cusId.val(1);
-    } else {
-        cusId.val(parseInt(customers_array[customers_array.length - 1].customer_id) + 1);
+    setupFormListeners() {
+        document.querySelector('#customers .btn-add').onclick = () => this.addCustomer();
+        this.updateCustomerBtn.onclick = () => this.updateCustomer();
+        this.deleteCustomerBtn.onclick = () => this.deleteCustomer();
+        document.querySelector('#customers .btn-clear').onclick = () => this.clearCustomerForm();
     }
-}
 
-setCustomerID();
+    loadCustomers() {
+        const customers = CustomerModel.getAll();
+        this.customersTableBody.innerHTML = '';
 
-let clearCustomerInputs = () => {
-    cusName.val("");
-    cusAddress.val("");
-    cusNic.val("");
-    cusEmail.val("");
-    cusTel.val("");
-    $("#input-search-customer-id").val("");
-}
-
-// customer table add data
-let loadCustomerData = () => {
-    cusBody.children().remove();
-
-    customers_array.map((value,index) => {
-        let data = `<tr><td>${value.customer_id}</td><td>${value.name}</td><td>${value.address}</td><td>${value.nic}</td><td>${value.email}</td><td>${value.tel}</td></tr>`;
-        cusBody.append(data);
-    });
-}
-
-loadCustomerData();
-
-// customer table click row get data
-cusBody.on('click', 'tr', function () {
-    const row = $(this);
-    console.log(row.index());
-
-    // const customer = {
-    //     customer_id: row.children().eq(0).text(),
-    //     name: row.children().eq(1).text(),
-    //     address: row.children().eq(2).text(),
-    //     nic: row.children().eq(3).text(),
-    //     email: row.children().eq(4).text(),
-    //     tel: row.children().eq(5).text()
-    // };
-
-    let customer = customers_array[row.index()];
-    setCustomerDataInput(customer);
-    console.log(customer);
-});
-
-let setCustomerDataInput = (customer) => {
-    cusId.val(customer.customer_id);
-    cusName.val(customer.name);
-    cusAddress.val(customer.address);
-    cusNic.val(customer.nic);
-    cusEmail.val(customer.email);
-    cusTel.val(customer.tel);
-}
-
-$("#customer-clear").on("click", function() {
-    clearCustomerInputs();
-});
-
-$("#customer-delete").on("click", function() {
-    let deletedId = cusId.val();
-    customers_array.map((value,index) => {
-        if (value.customer_id === deletedId) {
-            customers_array.splice(index, 1);
-            setAlert('success','Customer Delete Successfully!!');
+        if (customers.length === 0) {
+            this.customersTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No customers yet</td></tr>';
+            if (window.app) window.app.updateDashboardCustomersCount(0);
+            this.loadCustomerSelect();
+            return;
         }
-    });
-    loadCustomerData();
-    clearCustomerInputs();
-    setTotalValues();
-    setCustomerID();
-});
 
-$("#customer-update").on("click", function() {
-    let updateId = cusId.val();
-
-    if (validationCustomerInput()){
-        customers_array.forEach((value, index) => {
-            if (value.customer_id === updateId) {
-                customers_array[index].name = cusName.val();
-                customers_array[index].address = cusAddress.val();
-                customers_array[index].nic = cusNic.val();
-                customers_array[index].email = cusEmail.val();
-                customers_array[index].tel = cusTel.val();
-                setAlert('success','Customer Updated Successfully!!');
-            }
+        customers.forEach(customer => {
+            const customerOrders = window.app.orderController.getOrdersByCustomerId(customer.id);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${customer.id}</td>
+                <td><strong>${customer.name}</strong></td>
+                <td>${customer.email}</td>
+                <td>${customer.phone}</td>
+                <td>${customerOrders.length}</td>
+                <td>
+                    <button class="btn btn-sm btn-edit" onclick="customerController.editCustomer('${customer.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            `;
+            this.customersTableBody.appendChild(tr);
         });
 
-        loadCustomerData();
-        clearCustomerInputs();
-        setCustomerID();
+        if (window.app) window.app.updateDashboardCustomersCount(customers.length);
+        this.loadCustomerSelect();
     }
-});
 
-$("#view-all-customer").on("click", function() {
-    loadCustomerData();
-    $("#input-search-customer-id").val("");
-});
+    addCustomer() {
+        const name = document.getElementById('customerName').value.trim();
+        const email = document.getElementById('customerEmail').value.trim();
+        const phone = document.getElementById('customerPhone').value.trim();
 
-$("#search-customer").on("click", function() {
-    let searchId = $("#input-search-customer-id").val();
-
-    if (QTY.test(searchId)){
-        customers_array.map((value,index) => {
-            if (value.customer_id === searchId) {
-                cusBody.children().remove();
-
-                let data = `<tr><td>${value.customer_id}</td><td>${value.name}</td><td>${value.address}</td><td>${value.nic}</td><td>${value.email}</td><td>${value.tel}</td></tr>`;
-                cusBody.append(data);
-            }
-        });
-    } else {
-        setAlert('error','Invalid Customer ID !!');
-    }
-});
-
-const validationCustomerInput = () => {
-    if (NAME.test(cusName.val())){
-        if (cusAddress.val() !== "") {
-            if (NIC.test(cusNic.val())) {
-                if (EMAIL.test(cusEmail.val())){
-                    if (TEL.test(cusTel.val())) {
-                        return true;
-                    } else {
-                        setAlert('error','Invalid Telephone Number !!');
-                    }
-                } else {
-                    setAlert('error','Invalid Email !!');
-                }
-            } else {
-                setAlert('error','Invalid NIC !!');
-            }
-        } else {
-            setAlert('error','Invalid Address !!');
+        if (!name || !email || !phone) {
+            alert('Please fill all fields');
+            return;
         }
-    } else {
-        setAlert('error','Invalid Name !!');
+
+        CustomerModel.create(name, email, phone);
+        this.loadCustomers();
+        this.clearCustomerForm();
+        alert('Customer added successfully!');
     }
-    return false;
+
+    editCustomer(id) {
+        const customer = CustomerModel.getById(id);
+        if (customer) {
+            this.editingCustomerId = id;
+            document.getElementById('customerIdDisplay').value = customer.id;
+            document.getElementById('customerName').value = customer.name;
+            document.getElementById('customerEmail').value = customer.email;
+            document.getElementById('customerPhone').value = customer.phone;
+
+            this.updateCustomerBtn.style.display = 'inline-block';
+            this.deleteCustomerBtn.style.display = 'inline-block';
+        }
+    }
+
+    updateCustomer() {
+        if (!this.editingCustomerId) return;
+
+        const updatedCustomer = new CustomerDTO(
+            this.editingCustomerId,
+            document.getElementById('customerName').value.trim(),
+            document.getElementById('customerEmail').value.trim(),
+            document.getElementById('customerPhone').value.trim()
+        );
+
+        if (CustomerModel.update(updatedCustomer)) {
+            this.loadCustomers();
+            this.clearCustomerForm();
+            alert('Customer updated!');
+        }
+    }
+
+    deleteCustomer() {
+        if (!this.editingCustomerId) return;
+
+        if (confirm('Delete this customer? This cannot be undone.')) {
+            CustomerModel.delete(this.editingCustomerId);
+            this.loadCustomers();
+            this.clearCustomerForm();
+            alert('Customer deleted!');
+        }
+    }
+
+    clearCustomerForm() {
+        this.editingCustomerId = null;
+        document.getElementById('editCustomerId').value = '';
+        document.getElementById('customerIdDisplay').value = '';
+        document.getElementById('customerName').value = '';
+        document.getElementById('customerEmail').value = '';
+        document.getElementById('customerPhone').value = '';
+        this.updateCustomerBtn.style.display = 'none';
+        this.deleteCustomerBtn.style.display = 'none';
+    }
+
+    loadCustomerSelect() {
+        const select = document.getElementById('customerSelect');
+        select.innerHTML = '<option value="">Walk-in Customer</option>';
+
+        CustomerModel.getAll().forEach(customer => {
+            const option = document.createElement('option');
+            option.value = customer.id;
+            option.textContent = `${customer.name} (${customer.phone})`;
+            select.appendChild(option);
+        });
+    }
+
+    getAllCustomers() {
+        return CustomerModel.getAll();
+    }
 }

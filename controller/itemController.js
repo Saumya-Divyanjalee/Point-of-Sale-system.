@@ -1,146 +1,124 @@
-import ItemModel from "../model/itemModel.js";
-import {item_array} from "../db/database.js";
-import {setDataDropdowns} from "./orderController.js";
-import {setTotalValues} from "./dashboardController.js";
-import {PRICE,QTY} from "../util/regex.js";
-import {setAlert} from "../util/alert.js";
+// controller/ItemController.js
+import { ItemModel } from '../model/ItemModel.js';
+import { ItemDTO } from '../dto/ItemDTO.js';
 
-let itemBody = $("#item-table-body");
-let itemId = $("#inputItemId");
-let itemModel = $("#inputModel");
-let itemPrice = $("#inputPrice");
-let itemQty = $("#inputQuantity");
+export class ItemController {
+    constructor() {
+        this.editingItemId = null;
+        this.itemsTableBody = document.getElementById('itemsTable');
+        this.updateBtn = document.getElementById('updateBtn');
+        this.deleteBtn = document.getElementById('deleteBtn');
 
-// save button action
-$("#item-save").on("click", function() {
-    if (validationItemInputs()){
-        const item = new ItemModel(itemId.val(),itemModel.val(),itemPrice.val(),itemQty.val());
-        item_array.push(item);
-        loadItemData();
-        clearItemInputs();
-        setDataDropdowns();
-        setItemID();
-        setTotalValues();
-        setAlert('success','Inventory Saved Successfully!!');
+        this.setupFormListeners();
     }
-});
 
-// set Item ID
-let setItemID = () => {
-    if (item_array.length === 0) {
-        itemId.val(1);
-    } else {
-        itemId.val(parseInt(item_array[item_array.length - 1].item_id) + 1);
+    setupFormListeners() {
+        document.querySelector('#item-management .btn-add').onclick = () => this.addMenuItem();
+        this.updateBtn.onclick = () => this.updateMenuItem();
+        this.deleteBtn.onclick = () => this.deleteMenuItem();
+        document.querySelector('#item-management .btn-clear').onclick = () => this.clearItemForm();
     }
-}
 
-setItemID();
+    loadMenuItems() {
+        const items = ItemModel.getAll();
+        this.itemsTableBody.innerHTML = '';
 
-let clearItemInputs = () => {
-    itemModel.val("");
-    itemPrice.val("");
-    itemQty.val("");
-    $("#input-search-item-id").val("");
-}
+        items.forEach(item => {
+            const tr = document.createElement('tr');
+            const statusClass = item.stock < 10 ? 'low-stock' : '';
+            const statusText = item.stock > 0
+                ? '<span class="badge" style="background: rgba(74, 124, 89, 0.2); color: var(--success);">Available</span>'
+                : '<span class="badge badge-unpaid">Out of Stock</span>';
 
-// item table add data
-export let loadItemData = () => {
-    itemBody.children().remove();
-
-    item_array.map((value,index) => {
-        let data = `<tr><td>${value.item_id}</td><td>${value.model}</td><td>${value.price}</td><td>${value.qty}</td></tr>`;
-        itemBody.append(data);
-    });
-}
-
-// item table click row get data
-itemBody.on('click', 'tr', function () {
-    const row = $(this);
-    console.log(row.index());
-
-    let item = item_array[row.index()];
-    setItemDataInput(item);
-});
-
-let setItemDataInput = (item) => {
-    itemId.val(item.item_id);
-    itemModel.val(item.model);
-    itemPrice.val(item.price);
-    itemQty.val(item.qty);
-}
-
-$("#item-clear").on("click", function() {
-    clearItemInputs();
-});
-
-$("#item-delete").on("click", function() {
-    let deletedId = itemId.val();
-    item_array.map((value,index) => {
-        if (value.item_id === deletedId) {
-            item_array.splice(index, 1);
-            setAlert('success','Inventory Delete Successfully!!');
-        }
-    })
-    loadItemData();
-    clearItemInputs();
-    setTotalValues();
-    setItemID();
-});
-
-$("#item-update").on("click", function() {
-    if (validationItemInputs()){
-        let updateId = itemId.val();
-
-        item_array.map((value, index) => {
-            if (value.item_id === updateId) {
-                item_array[index].model = itemModel.val();
-                item_array[index].price = itemPrice.val();
-                item_array[index].qty = itemQty.val();
-                setAlert('success','Inventory Update Successfully!!');
-            }
+            tr.innerHTML = `
+                <td>${item.id}</td>
+                <td><strong>${item.name}</strong></td>
+                <td>LKR ${item.price.toFixed(2)}</td>
+                <td class="${statusClass}">${item.stock}</td>
+                <td>${statusText}</td>
+                <td>
+                    <button class="btn btn-sm btn-edit" onclick="itemController.editMenuItem('${item.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            `;
+            this.itemsTableBody.appendChild(tr);
         });
-
-        loadItemData();
-        clearItemInputs();
-        setItemID();
+        if (window.app) window.app.updateDashboardItemsCount(items.length);
     }
-});
 
-$("#view-all-items").on("click", function() {
-    loadItemData();
-    $("#input-search-item-id").val("");
-});
+    addMenuItem() {
+        const name = document.getElementById('itemName').value.trim();
+        const price = parseFloat(document.getElementById('itemPrice').value);
+        const stock = parseInt(document.getElementById('itemStock').value);
 
-$("#search-item").on("click", function() {
-    let searchId = $("#input-search-item-id").val();
-
-    if (QTY.test(searchId)){
-        item_array.map((value,index) => {
-            if (value.item_id === searchId) {
-                itemBody.children().remove();
-
-                let data = `<tr><td>${value.item_id}</td><td>${value.model}</td><td>${value.price}</td><td>${value.qty}</td></tr>`;
-                itemBody.append(data);
-            }
-        });
-    } else {
-        setAlert('error','Invalid Inventory ID !!');
-    }
-});
-
-let validationItemInputs = () => {
-    if (itemModel.val() !== "") {
-        if (PRICE.test(itemPrice.val())) {
-            if (QTY.test(itemQty.val())) {
-                return true;
-            } else {
-                setAlert('error','Invalid Quantity !!');
-            }
-        } else {
-            setAlert('error','Invalid Price !!');
+        if (!name || isNaN(price) || isNaN(stock) || price < 0 || stock < 0) {
+            alert('Please ensure all fields are filled and valid.');
+            return;
         }
-    } else {
-        setAlert('error','Invalid Inventory Model !!');
+
+        ItemModel.create(name, price, stock);
+        this.loadMenuItems();
+        this.clearItemForm();
+        alert('Menu item added successfully!');
     }
-    return false;
+
+    editMenuItem(id) {
+        const item = ItemModel.getById(id);
+        if (item) {
+            this.editingItemId = id;
+            document.getElementById('itemIdDisplay').value = item.id;
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemPrice').value = item.price;
+            document.getElementById('itemStock').value = item.stock;
+
+            this.updateBtn.style.display = 'inline-block';
+            this.deleteBtn.style.display = 'inline-block';
+        }
+    }
+
+    updateMenuItem() {
+        if (!this.editingItemId) return;
+
+        const currentItem = ItemModel.getById(this.editingItemId);
+        const updatedItem = new ItemDTO(
+            this.editingItemId,
+            document.getElementById('itemName').value.trim(),
+            parseFloat(document.getElementById('itemPrice').value),
+            parseInt(document.getElementById('itemStock').value),
+            currentItem.image
+        );
+
+        if (ItemModel.update(updatedItem)) {
+            this.loadMenuItems();
+            this.clearItemForm();
+            alert('Menu item updated!');
+        }
+    }
+
+    deleteMenuItem() {
+        if (!this.editingItemId) return;
+
+        if (confirm('Are you sure you want to delete this item?')) {
+            ItemModel.delete(this.editingItemId);
+            this.loadMenuItems();
+            this.clearItemForm();
+            alert('Menu item deleted!');
+        }
+    }
+
+    clearItemForm() {
+        this.editingItemId = null;
+        document.getElementById('editItemId').value = '';
+        document.getElementById('itemIdDisplay').value = '';
+        document.getElementById('itemName').value = '';
+        document.getElementById('itemPrice').value = '';
+        document.getElementById('itemStock').value = '';
+        this.updateBtn.style.display = 'none';
+        this.deleteBtn.style.display = 'none';
+    }
+
+    getAllItems() {
+        return ItemModel.getAll();
+    }
 }

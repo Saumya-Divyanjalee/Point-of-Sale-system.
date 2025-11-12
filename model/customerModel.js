@@ -1,59 +1,48 @@
-export default class CustomerModel{
-    constructor(id,name,address,nic,email,tel){
-        this._customer_id = id;
-        this._name = name;
-        this._address = address;
-        this._nic = nic;
-        this._email = email;
-        this._tel = tel;
+// model/CustomerModel.js
+import { db } from '../db/database.js';
+import { CustomerDTO } from '../dto/CustomerDTO.js';
+
+const CUSTOMER_PREFIX = 'C';
+const CUSTOMER_KEY = 'luxebrew_customers';
+
+export class CustomerModel {
+    static getAll() {
+        return db.getCustomers().map(c => new CustomerDTO(c.id, c.name, c.email, c.phone));
     }
 
-
-    get customer_id() {
-        return this._customer_id;
+    static saveAll(customers) {
+        db.saveCustomers(customers);
     }
 
-    set customer_id(value) {
-        this._customer_id = value;
+    static getById(id) {
+        return this.getAll().find(c => c.id === id);
     }
 
-    get name() {
-        return this._name;
+    static create(name, email, phone) {
+        const customers = this.getAll();
+        const id = db.getNextId(CUSTOMER_KEY, CUSTOMER_PREFIX);
+        const newCustomer = new CustomerDTO(id, name, email, phone);
+        customers.push(newCustomer);
+        this.saveAll(customers);
+        return newCustomer;
     }
 
-    set name(value) {
-        this._name = value;
+    static update(updatedCustomerDTO) {
+        let customers = this.getAll();
+        const index = customers.findIndex(c => c.id === updatedCustomerDTO.id);
+        if (index !== -1) {
+            customers[index] = updatedCustomerDTO;
+            this.saveAll(customers);
+            return true;
+        }
+        return false;
     }
 
-    get address() {
-        return this._address;
-    }
-
-    set address(value) {
-        this._address = value;
-    }
-
-    get nic() {
-        return this._nic;
-    }
-
-    set nic(value) {
-        this._nic = value;
-    }
-
-    get email() {
-        return this._email;
-    }
-
-    set email(value) {
-        this._email = value;
-    }
-
-    get tel() {
-        return this._tel;
-    }
-
-    set tel(value) {
-        this._tel = value;
+    static delete(id) {
+        let customers = this.getAll();
+        const initialLength = customers.length;
+        customers = customers.filter(c => c.id !== id);
+        this.saveAll(customers);
+        return customers.length !== initialLength;
     }
 }
