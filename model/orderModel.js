@@ -3,7 +3,7 @@ import { db } from '../db/database.js';
 import { OrderDTO } from '../dto/OrderDTO.js';
 
 const ORDER_PREFIX = 'O';
-const ORDER_KEY = 'luxebrew_orders';
+const ORDER_KEY = 'spicy-stop_orders';
 
 export class OrderModel {
     static getAll() {

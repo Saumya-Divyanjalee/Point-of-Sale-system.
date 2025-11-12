@@ -3,7 +3,7 @@ import { db } from '../db/database.js';
 import { ItemDTO } from '../dto/ItemDTO.js';
 
 const ITEM_PREFIX = 'I';
-const ITEM_KEY = 'luxebrew_menuItems';
+const ITEM_KEY = 'spicy-stop_menuItems';
 
 export class ItemModel {
     static getAll() {
@@ -26,7 +26,7 @@ export class ItemModel {
             name,
             price,
             stock,
-            'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80'
+            'https://media.gettyimages.com/id/164646124/photo/burning-chili-pepper-fire-flame.jpg?s=612x612&w=0&k=20&c=80CoHWcjAd_u7t4Pzob3_1z2W04X5Poe_dCWX4LcD3M='
         );
         items.push(newItem);
         this.saveAll(items);

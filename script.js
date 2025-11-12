@@ -1,16 +1,17 @@
-// script.js
+// script.js - Spicy Stop POS System (Sri Lanka)
+
 import { ItemController } from './controller/ItemController.js';
 import { CustomerController } from './controller/CustomerController.js';
 import { OrderController } from './controller/OrderController.js';
 
-class LuxeBrewApp {
+class SpicyStopApp {
     constructor() {
         // Instantiate Controllers
         this.itemController = new ItemController();
         this.customerController = new CustomerController();
         this.orderController = new OrderController(this.itemController);
 
-        // Make controllers globally accessible for use in inline HTML event handlers
+        // Global access for inline event handlers
         window.itemController = this.itemController;
         window.customerController = this.customerController;
         window.orderController = this.orderController;
@@ -19,13 +20,12 @@ class LuxeBrewApp {
         this.setupNavigation();
         this.setupLogin();
 
-        // Initial setup (run once DOM is ready)
+        // DOM Ready
         document.addEventListener('DOMContentLoaded', () => {
-            // If the main content is already visible (e.g., if we were using LS and session state), update dashboard
-            if (document.getElementById('mainContent').style.display === 'block') {
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent && mainContent.style.display === 'block') {
                 this.updateDashboardStats();
             } else {
-                // Initialize the item and customer data structures for use on first login
                 this.itemController.loadMenuItems();
                 this.customerController.loadCustomers();
             }
@@ -33,30 +33,46 @@ class LuxeBrewApp {
     }
 
     setupNavigation() {
-        // Handled by inline onclick
+        // Navigation handled via inline onclick in HTML
     }
 
     setupLogin() {
-        // FIX: Login logic added back to the form submit event
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        const loginForm = document.getElementById('loginForm');
+        if (!loginForm) return;
+
+        loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
 
-            if (username === 'admin' && password === 'luxe123') {
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('sidebar').style.display = 'block';
-                document.getElementById('mainContent').style.display = 'block';
-
-                // Show dashboard and set active link
-                const dashboardLink = document.querySelector('.nav-link[onclick*="dashboard"]');
-                if (dashboardLink) {
-                    this.showSection('dashboard', dashboardLink);
-                }
+            // Spicy Stop Admin Credentials
+            if (username === 'admin' && password === 'spicy123') {
+                this.showLoginSuccess();
             } else {
-                alert('Invalid credentials! Use: admin / luxe123');
+                this.showLoginError();
             }
         });
+    }
+
+    showLoginSuccess() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('sidebar').style.display = 'block';
+        document.getElementById('mainContent').style.display = 'block';
+
+        const dashboardLink = document.querySelector('.nav-link[onclick*="dashboard"]');
+        if (dashboardLink) {
+            this.showSection('dashboard', dashboardLink);
+        }
+    }
+
+    showLoginError() {
+        const errorMsg = document.getElementById('loginError');
+        if (errorMsg) {
+            errorMsg.style.display = 'block';
+            setTimeout(() => errorMsg.style.display = 'none', 3000);
+        } else {
+            alert('Invalid credentials! Try: admin / spicy123');
+        }
     }
 
     showSection(section, element) {
@@ -70,122 +86,169 @@ class LuxeBrewApp {
         document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
         element.classList.add('active');
 
-        // Load section data via Controllers
-        if (section === 'item-management') this.itemController.loadMenuItems();
-        if (section === 'pos') this.loadPOS();
-        if (section === 'order-history') this.orderController.loadOrderHistory();
-        if (section === 'customers') this.customerController.loadCustomers();
-        if (section === 'dashboard') this.updateDashboardStats();
+        // Load section-specific data
+        switch (section) {
+            case 'item-management':
+                this.itemController.loadMenuItems();
+                break;
+            case 'pos':
+                this.loadPOS();
+                break;
+            case 'order-history':
+                this.orderController.loadOrderHistory();
+                break;
+            case 'customers':
+                this.customerController.loadCustomers();
+                break;
+            case 'dashboard':
+                this.updateDashboardStats();
+                break;
+        }
     }
 
     logout() {
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('sidebar').style.display = 'none';
         document.getElementById('mainContent').style.display = 'none';
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
+
+        // Clear form
+        const username = document.getElementById('username');
+        const password = document.getElementById('password');
+        if (username) username.value = '';
+        if (password) password.value = '';
+
         // Reset active nav
         document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-        document.querySelector('.nav-link[onclick*="dashboard"]').classList.add('active');
     }
 
-    // POS View Logic
+    // === POS View ===
     loadPOS() {
         const items = this.itemController.getAllItems();
         const grid = document.getElementById('menuGrid');
+        if (!grid) return;
+
         grid.innerHTML = '';
 
-        items.forEach(item => {
-            if (item.stock > 0) {
-                const col = document.createElement('div');
-                col.className = 'col-md-6';
-                col.innerHTML = `
-                    <div class="item-card" onclick="orderController.addToCart('${item.id}')">
-                        <div class="item-image">
-                            <img src="${item.image}" alt="${item.name}">
-                            <div class="item-overlay">
-                                <div class="item-name">${item.name}</div>
-                                <div class="item-price">LKR ${item.price.toFixed(2)}</div>
-                                <div class="item-stock">${item.stock} in stock</div>
-                            </div>
-                        </div>
-                        <div class="item-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">${item.name}</h5>
-                                <span class="item-price">LKR ${item.price.toFixed(2)}</span>
-                            </div>
-                            <button class="add-to-cart">
-                                <i class="fas fa-cart-plus me-2"></i>Add to Cart
-                            </button>
+        const availableItems = items.filter(item => item.stock > 0);
+        if (availableItems.length === 0) {
+            grid.innerHTML = '<div class="col-12 text-center text-muted py-5">No items in stock</div>';
+            return;
+        }
+
+        availableItems.forEach(item => {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4';
+            col.innerHTML = `
+                <div class="item-card spicy-card" onclick="orderController.addToCart('${item.id}')">
+                    <div class="item-image">
+                        <img src="${item.image}" alt="${item.name}" onerror="this.src='../images/placeholder.jpg'">
+                        <div class="item-overlay">
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-price">LKR ${item.price.toFixed(2)}</div>
+                            <div class="item-stock">${item.stock} left</div>
+                            ${item.category ? `<div class="item-category">${item.category}</div>` : ''}
                         </div>
                     </div>
-                `;
-                grid.appendChild(col);
-            }
+                    <div class="item-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="mb-0 text-truncate">${item.name}</h5>
+                            <span class="item-price">LKR ${item.price.toFixed(2)}</span>
+                        </div>
+                        <button class="add-to-cart btn-spicy w-100">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(col);
         });
 
         this.orderController.updateCartDisplay();
         this.customerController.loadCustomerSelect();
     }
 
-    // Dashboard Logic
+    // === Dashboard Stats ===
     updateDashboardStats() {
         const allOrders = this.orderController.getAllOrders();
         const allCustomers = this.customerController.getAllCustomers();
         const allItems = this.itemController.getAllItems();
 
-        const today = new Date().toDateString();
-        const todayOrders = allOrders.filter(o => new Date(o.date).toDateString() === today);
+        const today = new Date();
+        const todayStr = today.toDateString();
+
+        const todayOrders = allOrders.filter(o => {
+            const orderDate = new Date(o.date);
+            return orderDate.toDateString() === todayStr;
+        });
+
         const todaySales = todayOrders.reduce((sum, o) => sum + o.total, 0);
 
-        document.getElementById('todaySales').textContent = `LKR ${todaySales.toFixed(2)}`;
-        document.getElementById('todayOrders').textContent = todayOrders.length;
-        document.getElementById('totalCustomers').textContent = allCustomers.length;
-        document.getElementById('menuItems').textContent = allItems.length;
+        // Update DOM
+        this.safeSetText('todaySales', `LKR ${todaySales.toFixed(2)}`);
+        this.safeSetText('todayOrders', todayOrders.length);
+        this.safeSetText('totalCustomers', allCustomers.length);
+        this.safeSetText('menuItems', allItems.length);
 
         this.updateRecentOrders(allOrders);
+        this.updateLowStockAlert(allItems);
     }
 
-    updateDashboardItemsCount(count) {
-        document.getElementById('menuItems').textContent = count;
+    safeSetText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
     }
 
-    updateDashboardCustomersCount(count) {
-        document.getElementById('totalCustomers').textContent = count;
-    }
+    updateLowStockAlert(items) {
+        const lowStock = items.filter(i => i.stock > 0 && i.stock <= 5);
+        const alert = document.getElementById('lowStockAlert');
+        if (!alert) return;
 
-    updateDashboardOrdersCount(count) {
-        // Not used for dashboard total, but kept for future expansion if needed
+        if (lowStock.length > 0) {
+            alert.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>${lowStock.length}</strong> item${lowStock.length > 1 ? 's' : ''} low in stock!
+            `;
+            alert.style.display = 'block';
+        } else {
+            alert.style.display = 'none';
+        }
     }
 
     updateRecentOrders(allOrders) {
-        // Sort orders by date descending to get the latest 5
-        const recent = allOrders.slice()
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        const tbody = document.getElementById('recentOrders');
+        if (!tbody) return;
+
+        const recent = allOrders
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
             .slice(0, 5);
 
-        const tbody = document.getElementById('recentOrders');
         tbody.innerHTML = '';
 
         if (recent.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No orders yet</td></tr>';
-        } else {
-            recent.forEach(order => {
-                const customer = this.customerController.getAllCustomers().find(c => c.id === order.customerId);
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${order.id}</strong></td>
-                    <td>${customer ? customer.name : 'Walk-in'}</td>
-                    <td>${order.items.length} item${order.items.length > 1 ? 's' : ''}</td>
-                    <td><strong>LKR ${order.total.toFixed(2)}</strong></td>
-                    <td><span class="badge ${order.status === 'Paid' ? 'badge-paid' : 'badge-unpaid'}">${order.status}</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
+            return;
         }
+
+        recent.forEach(order => {
+            const customer = this.customerController.getCustomerById(order.customerId);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>#${order.id}</strong></td>
+                <td>${customer ? customer.name : 'Walk-in'}</td>
+                <td>${order.items.length} item${order.items.length > 1 ? 's' : ''}</td>
+                <td><strong>LKR ${order.total.toFixed(2)}</strong></td>
+                <td>
+                    <span class="badge ${order.status === 'Paid' ? 'badge-paid' : 'badge-pending'}">
+                        ${order.status}
+                    </span>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 }
 
+// Initialize App
 document.addEventListener('DOMContentLoaded', () => {
-    new LuxeBrewApp();
+    window.spicyStopApp = new SpicyStopApp();
 });

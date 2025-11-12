@@ -3,24 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name ="keywords" content="POS,pos,spa,HTML,CSS,JavaScript,Spicy Stop">
+  <meta name ="description" content="This is my portfolio website-Saumya">
+  <meta name ="author" content="Saumya Divyanjalee">
+  <meta name ="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Spicy Stop</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atomic+Age&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto+Slab:wght@100..900&family=Young+Serif&display=swap" rel="stylesheet">
   <link href="style/style.css" rel="stylesheet">
+
 </head>
 <body>
+
 <div class="bg-pattern"></div>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN SCREEN (Updated) -->
 <div id="loginScreen" class="login-screen">
+  <div class="login-bg"></div>
   <div class="login-card">
     <div class="logo-container">
       <div class="logo">
-        <i class="fas fa-candy-cane"></i>
+        <i class="fas fa-pepper-hot"></i>
       </div>
       <h1 class="brand-name">Spicy Stop</h1>
-      <p class="tagline">Premium Sweet Shop Experience</p>
+      <p class="tagline">Extreme Heat & Bold Flavors</p>
     </div>
     <form id="loginForm">
       <div class="mb-3">
@@ -40,9 +52,9 @@
 <div class="sidebar" id="sidebar" style="display: none;">
   <div class="sidebar-header">
     <div class="sidebar-logo">
-      <i class="fas fa-candy-cane"></i>
+      <i class="fas fa-pepper-hot"></i>
     </div>
-    <h3 class="sidebar-title">Sugar Bliss</h3>
+    <h3 class="sidebar-title">Spicy Stop</h3>
     <p class="sidebar-subtitle">POS System</p>
   </div>
   <nav>
@@ -51,8 +63,8 @@
       <span>Dashboard</span>
     </a>
     <a href="#" class="nav-link" onclick="app.showSection('item-management', this)">
-      <i class="fas fa-ice-cream"></i>
-      <span>Sweet Items</span>
+      <i class="fas fa-fire"></i>
+      <span>Spicy Items</span>
     </a>
     <a href="#" class="nav-link" onclick="app.showSection('customers', this)">
       <i class="fas fa-users"></i>
@@ -81,7 +93,7 @@
   <div id="dashboard" class="animate-fadeInUp">
     <div class="page-header">
       <h1 class="page-title">Welcome Back</h1>
-      <p class="page-subtitle">Monitor your sweet shop operations at a glance</p>
+      <p class="page-subtitle">Monitor your spicy empire at a glance</p>
     </div>
 
     <div class="row g-4 mb-5">
@@ -115,10 +127,10 @@
       <div class="col-md-3">
         <div class="stat-card">
           <div class="stat-icon stat-items">
-            <i class="fas fa-cookie"></i>
+            <i class="fas fa-pepper-hot"></i>
           </div>
           <div class="stat-value" id="menuItems">0</div>
-          <div class="stat-label">Sweet Items</div>
+          <div class="stat-label">Spicy Items</div>
         </div>
       </div>
     </div>
@@ -140,7 +152,7 @@
               </thead>
               <tbody id="recentOrders">
               <tr>
-                <td colspan="5" class="text-center py-4">No orders yet</td>
+                <td colspan="5" class="text-center py-4">No spicy orders yet</td>
               </tr>
               </tbody>
             </table>
@@ -151,13 +163,13 @@
         <div class="lux-card">
           <h3 class="card-title">Quick Actions</h3>
           <div class="d-grid gap-3">
-            <button class="btn btn-lg" style="background: linear-gradient(135deg, #ff6b9d, #ff8fab); color: white;" onclick="app.showSection('pos', document.querySelector('.nav-link[onclick*=\'pos\']'))">
+            <button class="btn btn-lg" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;" onclick="app.showSection('pos', document.querySelector('.nav-link[onclick*=\'pos\']'))">
               <i class="fas fa-plus-circle me-2"></i>New Order
             </button>
-            <button class="btn btn-lg" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;" onclick="app.showSection('item-management', document.querySelector('.nav-link[onclick*=\'item-management\']'))">
-              <i class="fas fa-plus me-2"></i>Add Sweet Item
+            <button class="btn btn-lg" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white;" onclick="app.showSection('item-management', document.querySelector('.nav-link[onclick*=\'item-management\']'))">
+              <i class="fas fa-plus me-2"></i>Add Spicy Item
             </button>
-            <button class="btn btn-lg" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white;" onclick="app.showSection('customers', document.querySelector('.nav-link[onclick*=\'customers\']'))">
+            <button class="btn btn-lg" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;" onclick="app.showSection('customers', document.querySelector('.nav-link[onclick*=\'customers\']'))">
               <i class="fas fa-user-plus me-2"></i>Add Customer
             </button>
           </div>
@@ -169,8 +181,8 @@
   <!-- ITEM MANAGEMENT -->
   <div id="item-management" style="display: none;">
     <div class="page-header">
-      <h1 class="page-title">Sweet Menu Management</h1>
-      <p class="page-subtitle">Add, edit, or remove sweets & desserts</p>
+      <h1 class="page-title">Spicy Menu Management</h1>
+      <p class="page-subtitle">Add, edit, or remove fiery dishes & sauces</p>
     </div>
 
     <div class="lux-card mb-4">
@@ -182,8 +194,8 @@
             <input type="text" class="form-control" id="itemIdDisplay" disabled>
           </div>
           <div class="col-md-3">
-            <label class="form-label">Sweet Name</label>
-            <input type="text" class="form-control" id="itemName" placeholder="e.g., Gulab Jamun" required>
+            <label class="form-label">Spicy Name</label>
+            <input type="text" class="form-control" id="itemName" placeholder="e.g., Ghost Pepper Wings" required>
           </div>
           <div class="col-md-3">
             <label class="form-label">Price (LKR)</label>
@@ -191,12 +203,24 @@
           </div>
           <div class="col-md-3">
             <label class="form-label">Stock (pcs)</label>
-            <input type="number" class="form-control" id="itemStock" min="0" placeholder="e.g., 50" required>
+            <input type="number" class="form-control" id="itemStock" min="0" placeholder="e.g., 30" required>
+          </div>
+        </div>
+        <div class="row g-3 mt-2">
+          <div class="col-md-3">
+            <label class="form-label">Heat Level</label>
+            <select class="form-select" id="itemHeatLevel">
+              <option value="Mild">Mild</option>
+              <option value="Medium">Medium</option>
+              <option value="Hot">Hot</option>
+              <option value="Extreme">Extreme</option>
+              <option value="Inferno">Inferno</option>
+            </select>
           </div>
         </div>
         <div class="mt-4 d-flex gap-2">
           <button type="button" class="btn btn-add btn-action">
-            <i class="fas fa-plus me-2"></i>Add Sweet
+            <i class="fas fa-plus me-2"></i>Add Item
           </button>
           <button type="button" class="btn btn-edit btn-action" id="updateBtn" style="display: none;">
             <i class="fas fa-save me-2"></i>Update Item
@@ -212,7 +236,7 @@
     </div>
 
     <div class="lux-card">
-      <h3 class="card-title">Sweet Menu</h3>
+      <h3 class="card-title">Spicy Menu</h3>
       <div class="table-responsive">
         <table class="table">
           <thead>
@@ -221,6 +245,7 @@
             <th>Name</th>
             <th>Price</th>
             <th>Stock</th>
+            <th>Heat</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -234,14 +259,14 @@
   <!-- POS TERMINAL -->
   <div id="pos" style="display: none;">
     <div class="page-header">
-      <h1 class="page-title">Sweet Shop POS</h1>
-      <p class="page-subtitle">Create orders with sweetness & precision</p>
+      <h1 class="page-title">Spicy Shop POS</h1>
+      <p class="page-subtitle">Ring up orders with fire & precision</p>
     </div>
 
     <div class="row">
       <div class="col-lg-8">
         <div class="lux-card">
-          <h3 class="card-title">Sweet Menu</h3>
+          <h3 class="card-title">Spicy Menu</h3>
           <div class="row g-4" id="menuGrid">
             <!-- Items loaded dynamically -->
           </div>
@@ -269,7 +294,7 @@
           <div class="cart-items" id="cartItems">
             <div class="text-center text-muted py-4">
               <i class="fas fa-shopping-cart fa-3x mb-3"></i>
-              <p>No sweets in cart</p>
+              <p>No spicy items in cart</p>
             </div>
           </div>
 
@@ -290,7 +315,7 @@
   <div id="order-history" style="display: none;">
     <div class="page-header">
       <h1 class="page-title">Order History</h1>
-      <p class="page-subtitle">View all past sweet orders</p>
+      <p class="page-subtitle">View all past fiery orders</p>
     </div>
 
     <div class="lux-card">
@@ -317,7 +342,7 @@
   <div id="customers" style="display: none;">
     <div class="page-header">
       <h1 class="page-title">Customer Management</h1>
-      <p class="page-subtitle">Build sweet relationships with your patrons</p>
+      <p class="page-subtitle">Build fiery relationships with spice lovers</p>
     </div>
 
     <div class="lux-card mb-4">
@@ -369,6 +394,7 @@
             <th>Email</th>
             <th>Phone</th>
             <th>Orders</th>
+            <th>Heat Tolerance</th>
             <th>Action</th>
           </tr>
           </thead>

@@ -1,25 +1,18 @@
-/* style.css - Luxe Sweets: Premium Sweet Shop POS */
 :root {
-    --primary: #e91e63;           /* Rich Pink */
-    --primary-dark: #c2185b;
-    --secondary: #ffb6c1;         /* Light Pink */
-    --accent: #ffd700;            /* Gold */
-    --accent-light: #fff8e1;
-    --success: #66bb6a;
-    --warning: #ffa726;
-    --danger: #ef5350;
-    --dark: #2c2c2c;
-    --light: #fff5f7;
-    --gray: #f8f9fa;
-    --gray-dark: #6c757d;
-    --border-radius: 16px;
-    --border-radius-sm: 12px;
-    --shadow: 0 8px 25px rgba(233, 30, 99, 0.12);
-    --shadow-lg: 0 15px 35px rgba(233, 30, 99, 0.18);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --font-primary: 'Montserrat', sans-serif;
-    --font-display: 'Playfair Display', serif;
+    --primary: #2c1a0d;
+    --secondary: #d4a574; /* Earthy Gold/Brown */
+    --accent: #f5e6d3; /* Off-White/Cream */
+    --dark: #1a0f08;
+    --light: #faf6f2;
+    --gold: #b8860b;
+    --success: #4a7c59; /* Green for Success */
+    --danger: #e74c3c; /* Red for Removal/Low Stock */
+    --spicy-red: #800000; /* Deep Red for Logo/Accent */
+    --hot-red-light: #c0392b; /* Brighter red for gradients/shadows */
 }
+
+/* Updated import: Includes Roboto Slab (400, 700) along with the existing fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Roboto+Slab:wght@400;700&display=swap');
 
 * {
     margin: 0;
@@ -28,499 +21,749 @@
 }
 
 body {
-    font-family: var(--font-primary);
-    background: linear-gradient(135deg, #fdf2f8 0%, #fce4ec 100%);
-    color: var(--dark);
-    min-height: 100vh;
+    background: linear-gradient(135deg, var(--light) 0%, var(--accent) 100%);
+    /* Changed font-family to Roboto Slab */
+    font-family: 'Roboto Slab', serif;
+    color: var(--primary);
     overflow-x: hidden;
 }
 
-/* Background Pattern */
+/* Animated Background Pattern */
 .bg-pattern {
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background-image:
-            radial-gradient(circle at 20% 80%, rgba(255, 182, 193, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
-            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><path fill="%23e91e63" fill-opacity="0.03" d="M30 15c8.284 0 15-6.716 15-15 0 8.284-6.716 15-15 15z"/></svg>');
-    pointer-events: none;
+            radial-gradient(circle at 20% 80%, rgba(212, 165, 116, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(180, 140, 90, 0.08) 0%, transparent 50%);
     z-index: -1;
+    animation: float 20s ease-in-out infinite;
 }
 
-/* Login Screen */
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(1deg); }
+}
+
+/* --- Utility Classes for Layout (Assumes the HTML uses a grid system like Bootstrap or Tailwind) --- */
+/* Item Grid */
+.item-grid-container {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    margin-bottom: 2rem;
+}
+
+/* --- Login Screen --- */
 .login-screen {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
-    background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)), url('https://images.unsplash.com/photo-1554118811-72fbfd4d4e3a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') center/cover;
+    /* Adjusted background image path for consistency in a single-file context, assuming this is an external image */
+    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('../img/spicy-red-chili-pepper-bright-background-healthy-food-vegeterian-nutrition-concept-raw-fresh-vegetables-seasoning-dishes-agriculture-plants-cuisine-top-view-shot-from.jpg') center/cover;
 }
 
 .login-card {
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
-    padding: 3rem 2.5rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    border-radius: 25px;
+    padding: 3rem;
     width: 100%;
     max-width: 420px;
-    text-align: center;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    border: 1px solid rgba(212, 165, 116, 0.3);
 }
 
-.logo-container .logo {
-    width: 90px; height: 90px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+.logo-container {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.logo {
+    width: 120px;
+    height: 120px;
+    background: var(--spicy-red);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 1rem;
-    font-size: 2.2rem;
+    box-shadow: 0 10px 30px rgba(212, 165, 116, 0.4);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 10px 30px rgba(212, 165, 116, 0.4); }
+    50% { box-shadow: 0 10px 50px rgba(212, 165, 116, 0.6); }
+    100% { box-shadow: 0 10px 30px rgba(212, 165, 116, 0.4); }
+}
+
+.logo i {
+    font-size: 3rem;
     color: white;
-    box-shadow: 0 8px 20px rgba(233, 30, 99, 0.3);
 }
 
 .brand-name {
-    font-family: var(--font-display);
-    font-size: 2.5rem;
-    color: var(--primary-dark);
-    margin: 0.5rem 0;
-    font-weight: 700;
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
 }
 
 .tagline {
-    color: var(--gray-dark);
-    font-size: 1rem;
-    margin-bottom: 2rem;
+    color: var(--secondary);
+    font-weight: 500;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
 }
 
-.form-control {
-    border-radius: var(--border-radius-sm);
-    border: 1.5px solid #e0c3d0;
+.form-control, .form-select {
+    border: 2px solid #e0d6cb;
+    border-radius: 15px;
     padding: 0.75rem 1rem;
     font-size: 1rem;
-    transition: var(--transition);
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.8);
+    width: 100%; /* Ensure full width on mobile */
+    font-family: 'Roboto Slab', serif; /* Use Roboto Slab in forms */
 }
 
-.form-control:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.2);
-    outline: none;
+.form-control:focus, .form-select:focus {
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 0.2rem rgba(212, 165, 116, 0.25);
+    background: white;
 }
 
+/* --- HOT RED LOGIN BUTTON --- */
 .btn-login {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
+    background: linear-gradient(135deg, var(--danger), var(--spicy-red));
     border: none;
-    border-radius: var(--border-radius-sm);
-    padding: 0.85rem;
+    border-radius: 15px;
+    padding: 0.75rem;
     font-weight: 600;
-    font-size: 1.1rem;
-    transition: var(--transition);
-    margin-top: 1rem;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(128, 0, 0, 0.4); /* Red Shadow */
+    width: 100%;
 }
 
 .btn-login:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(233, 30, 99, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(128, 0, 0, 0.6); /* Deeper Red Shadow */
+    background: linear-gradient(135deg, var(--spicy-red), var(--hot-red-light));
 }
+/* ---------------------------- */
+
 
 /* Sidebar */
 .sidebar {
     position: fixed;
-    left: 0; top: 0;
-    width: 260px;
+    left: 0;
+    top: 0;
+    width: 280px;
     height: 100vh;
-    background: linear-gradient(to bottom, #fff1f5, #fde8ee);
-    border-right: 1px solid rgba(233, 30, 99, 0.1);
-    padding: 1.5rem 0;
+    background: #990000;
+    background: linear-gradient(90deg, rgba(153, 0, 0, 1) 0%, rgba(102, 2, 34, 1) 35%, rgba(10, 0, 0, 1) 100%);
+    padding: 2rem 1.5rem;
+    box-shadow: 5px 0 20px rgba(0,0,0,0.2);
     z-index: 1000;
-    transition: var(--transition);
-    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
 }
 
 .sidebar-header {
     text-align: center;
-    padding: 0 1.5rem 1.5rem;
-    border-bottom: 1px dashed rgba(233, 30, 99, 0.2);
-    margin-bottom: 1.5rem;
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(212, 165, 116, 0.2);
 }
 
 .sidebar-logo {
-    width: 60px; height: 60px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    width: 80px;
+    height: 80px;
+    background: var(--spicy-red);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 0.75rem;
-    font-size: 1.5rem;
+    margin: 0 auto 1rem;
+    box-shadow: 0 8px 25px rgba(212, 165, 116, 0.4);
+}
+
+.sidebar-logo i {
+    font-size: 2rem;
     color: white;
-    box-shadow: 0 6px 15px rgba(233, 30, 99, 0.3);
 }
 
 .sidebar-title {
-    font-family: var(--font-display);
-    font-size: 1.6rem;
-    color: var(--primary-dark);
-    margin: 0;
+    font-family: 'Playfair Display', serif;
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 0.3rem;
 }
 
 .sidebar-subtitle {
-    font-size: 0.85rem;
-    color: var(--primary);
-    font-weight: 500;
+    color: var(--accent);
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+}
+
+.nav-item {
+    margin-bottom: 0.5rem;
 }
 
 .nav-link {
     display: flex;
     align-items: center;
-    padding: 0.9rem 1.5rem;
-    color: var(--dark);
-    text-decoration: none;
-    transition: var(--transition);
-    margin: 0.25rem 1rem;
-    border-radius: var(--border-radius-sm);
+    padding: 1rem 1.5rem;
+    color: var(--accent);
+    border-radius: 15px;
+    transition: all 0.3s ease;
     font-weight: 500;
     position: relative;
+    overflow: hidden;
+    text-decoration: none; /* Ensure links are styled correctly */
 }
 
 .nav-link i {
-    width: 24px;
-    font-size: 1.1rem;
-    margin-right: 0.75rem;
+    font-size: 1.2rem;
+    margin-right: 1rem;
+    width: 25px;
+    text-align: center;
 }
 
 .nav-link:hover, .nav-link.active {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
-    transform: translateX(4px);
-    box-shadow: 0 4px 12px rgba(233, 30, 99, 0.25);
+    background: rgba(212, 165, 116, 0.2);
+    color: var(--secondary);
+    transform: translateX(5px);
 }
 
 .nav-link.active::before {
     content: '';
     position: absolute;
     left: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 0;
+    height: 100%;
     width: 4px;
-    height: 30px;
-    background: var(--accent);
-    border-radius: 0 4px 4px 0;
+    background: var(--spicy-red);
+}
+
+.nav-link span {
+    flex: 1;
 }
 
 .nav-badge {
-    background: var(--accent);
-    color: var(--dark);
-    font-size: 0.75rem;
+    background: var(--secondary);
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
     font-weight: 600;
-    padding: 0.25rem 0.5rem;
-    border-radius: 50px;
-    min-width: 24px;
-    text-align: center;
 }
 
 /* Main Content */
 .main-content {
-    margin-left: 260px;
-    padding: 2rem;
+    margin-left: 280px;
     min-height: 100vh;
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+/* Mobile Menu Button (Only visible on small screens) */
+.menu-toggle {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1001;
+    background: var(--primary);
+    color: var(--secondary);
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem;
+    font-size: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.menu-toggle:active {
+    transform: scale(0.95);
 }
 
 .page-header {
     margin-bottom: 2rem;
-    text-align: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(212, 165, 116, 0.3);
 }
 
 .page-title {
-    font-family: var(--font-display);
+    font-family: 'Playfair Display', serif;
     font-size: 2.5rem;
-    color: var(--primary-dark);
+    color: var(--primary);
     margin-bottom: 0.5rem;
-    font-weight: 700;
 }
 
 .page-subtitle {
-    color: var(--gray-dark);
-    font-size: 1.1rem;
-    font-weight: 400;
-}
-
-/* Cards */
-.lux-card, .stat-card, .order-card {
-    background: white;
-    border-radius: var(--border-radius);
-    padding: 1.5rem;
-    box-shadow: var(--shadow);
-    border: 1px solid rgba(233, 30, 99, 0.1);
-    transition: var(--transition);
-}
-
-.lux-card:hover, .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-}
-
-.card-title {
-    font-family: var(--font-display);
-    font-size: 1.4rem;
-    color: var(--primary-dark);
-    margin-bottom: 1rem;
-    font-weight: 600;
-    position: relative;
-    padding-bottom: 0.5rem;
-}
-
-.card-title::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 50px;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary), var(--accent));
-    border-radius: 2px;
-}
-
-/* Stat Cards */
-.stat-card {
-    text-align: center;
-    padding: 1.5rem 1rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.stat-icon {
-    width: 50px; height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
-    font-size: 1.4rem;
-    color: white;
-}
-
-.stat-sales { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
-.stat-orders { background: linear-gradient(135deg, #4ecdc4, #44a49a); }
-.stat-customers { background: linear-gradient(135deg, #a29bfe, #8e7cc3); }
-.stat-items { background: linear-gradient(135deg, #ffd93d, #ffbd33); }
-
-.stat-value {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--dark);
-}
-
-.stat-label {
-    color: var(--gray-dark);
-    font-size: 0.9rem;
+    color: var(--secondary);
     font-weight: 500;
 }
 
-/* Tables */
-.table {
-    margin-bottom: 0;
-    font-size: 0.95rem;
-}
-
-.table th {
-    font-weight: 600;
-    color: var(--primary-dark);
-    border-top: none;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.table td {
-    vertical-align: middle;
-    color: var(--dark);
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(233, 30, 99, 0.05);
-}
-
-/* Buttons */
-.btn-action {
-    border-radius: var(--border-radius-sm);
-    font-weight: 600;
-    padding: 0.6rem 1.2rem;
-    font-size: 0.95rem;
-    transition: var(--transition);
-    border: none;
-}
-
-.btn-add {
-    background: linear-gradient(135deg, #66bb6a, #4caf50);
-    color: white;
-}
-
-.btn-edit {
-    background: linear-gradient(135deg, #ffa726, #fb8c00);
-    color: white;
-}
-
-.btn-delete {
-    background: linear-gradient(135deg, #ef5350, #e53935);
-    color: white;
-}
-
-.btn-clear {
-    background: linear-gradient(135deg, #b0bec5, #90a4ae);
-    color: white;
-}
-
-.btn-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-}
-
-/* POS Menu Grid */
-#menuGrid .menu-item {
+/* Cards */
+.lux-card {
     background: white;
-    border-radius: var(--border-radius);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border: 1px solid rgba(212, 165, 116, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
     overflow: hidden;
-    box-shadow: var(--shadow);
-    transition: var(--transition);
+}
+
+.lux-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--secondary), #c89b6a);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.lux-card:hover {
+    transform: translateY(-5px); /* Reduced hover lift for stability */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.12); /* Adjusted shadow */
+}
+
+.lux-card:hover::before {
+    opacity: 1;
+}
+
+.card-title {
+    font-family: 'Playfair Display', serif;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+/* Item Cards */
+.item-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
     cursor: pointer;
-    border: 1px solid rgba(233, 30, 99, 0.1);
+    height: 100%;
 }
 
-#menuGrid .menu-item:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-lg);
+.item-card:hover {
+    transform: translateY(-8px); /* Reduced hover lift */
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15); /* Adjusted shadow */
 }
 
-.menu-item-img {
-    height: 140px;
-    background: var(--light);
-    background-size: cover;
-    background-position: center;
+.item-image {
+    height: 200px;
+    overflow: hidden;
     position: relative;
 }
 
-.menu-item-img::after {
-    content: 'Sweet';
+.item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.item-card:hover .item-image img {
+    transform: scale(1.05); /* Reduced scale for subtle effect */
+}
+
+.item-overlay {
     position: absolute;
-    top: 8px; right: 8px;
-    background: var(--accent);
-    color: var(--dark);
-    font-size: 0.7rem;
-    font-weight: 600;
-    padding: 0.25rem 0.5rem;
-    border-radius: 50px;
-}
-
-.menu-item-body {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    color: white;
     padding: 1rem;
-    text-align: center;
+    transform: translateY(100%); /* Changed to 100% for full reveal from bottom */
+    transition: transform 0.3s ease;
 }
 
-.menu-item-name {
+.item-card:hover .item-overlay {
+    transform: translateY(0);
+}
+
+.item-name {
     font-weight: 600;
-    color: var(--dark);
-    margin-bottom: 0.5rem;
     font-size: 1.1rem;
+    margin-bottom: 0.3rem;
 }
 
-.menu-item-price {
-    font-size: 1.3rem;
+.item-price {
     font-weight: 700;
-    color: var(--primary);
+    color: var(--secondary);
+    font-size: 1.2rem;
 }
 
-/* Order Card */
+.item-stock {
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+.low-stock {
+    color: var(--danger) !important;
+    animation: blink 2s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.item-body {
+    padding: 1.5rem;
+}
+
+/* --- HOT RED ADD TO CART BUTTON --- */
+.add-to-cart {
+    background: linear-gradient(135deg, var(--danger), var(--spicy-red));
+    border: none;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    width: 100%;
+    cursor: pointer;
+}
+
+.add-to-cart:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(128, 0, 0, 0.4); /* Red Shadow */
+    background: linear-gradient(135deg, var(--spicy-red), var(--hot-red-light));
+}
+/* --------------------------------- */
+
+/* Cart/Place Order */
 .order-card {
     background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
-    height: fit-content;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border: 1px solid rgba(212, 165, 116, 0.2);
     position: sticky;
     top: 2rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
 }
 
 .order-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px dashed rgba(233, 30, 99, 0.2);
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(212, 165, 116, 0.3);
 }
 
 .order-title {
-    font-size: 1.3rem;
-    color: var(--primary-dark);
-    margin: 0;
+    font-family: 'Playfair Display', serif;
+    color: var(--primary);
+    font-size: 1.4rem;
 }
 
 .cart-items {
     max-height: 400px;
     overflow-y: auto;
-    margin: 1rem 0;
+    margin-bottom: 1.5rem;
 }
 
 .cart-item {
     display: flex;
     justify-content: space-between;
-    padding: 0.75rem 0;
-    border-bottom: 1px dashed rgba(233, 30, 99, 0.1);
+    align-items: center;
+    padding: 0.8rem 0;
+    border-bottom: 1px dashed rgba(212, 165, 116, 0.3);
+}
+
+.cart-item:last-child {
+    border-bottom: none;
 }
 
 .cart-item-name {
     font-weight: 500;
+    flex: 1;
+    margin-right: 0.5rem;
+}
+
+.cart-item-qty {
+    background: var(--accent);
+    color: var(--primary);
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 0 0.5rem;
 }
 
 .cart-item-price {
     font-weight: 600;
-    color: var(--primary);
+    color: var(--secondary);
+    min-width: 60px; /* Ensures price column alignment */
+    text-align: right;
+}
+
+.cart-item-remove {
+    background: var(--danger);
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 0.5rem;
+}
+
+.cart-item-remove:hover {
+    background: #c0392b;
+    transform: scale(1.1);
 }
 
 .order-total {
     display: flex;
     justify-content: space-between;
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--primary-dark);
-    margin: 1.5rem 0 1rem;
+    align-items: center;
     padding: 1rem 0;
-    border-top: 2px solid rgba(233, 30, 99, 0.2);
+    border-top: 2px solid var(--secondary);
+    margin-top: 1rem;
 }
 
-.btn-place-order {
-    width: 100%;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
-    border: none;
-    border-radius: var(--border-radius-sm);
-    padding: 1rem;
-    font-size: 1.2rem;
+.total-label {
+    font-size: 1.1rem;
     font-weight: 600;
-    transition: var(--transition);
+    color: var(--primary);
 }
 
-.btn-place-order:not(:disabled):hover {
+.total-amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--secondary);
+    font-family: 'Playfair Display', serif;
+}
+
+/* --- HOT RED PLACE ORDER BUTTON --- */
+.btn-place-order {
+    background: linear-gradient(135deg, var(--spicy-red), var(--hot-red-light));
+    border: none;
+    color: white;
+    padding: 1rem;
+    border-radius: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 1rem;
+    box-shadow: 0 8px 25px rgba(128, 0, 0, 0.4); /* Red Shadow */
+    cursor: pointer;
+}
+
+.btn-place-order:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(233, 30, 99, 0.3);
+    box-shadow: 0 15px 35px rgba(128, 0, 0, 0.6); /* Deeper Red Shadow */
+    background: linear-gradient(135deg, var(--hot-red-light), var(--spicy-red));
 }
 
 .btn-place-order:disabled {
-    background: #ccc;
+    background: #95a5a6;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
+}
+/* ---------------------------------- */
+
+/* Customer Select */
+.customer-select {
+    position: relative;
+    width: 100%;
+}
+
+.customer-select::after {
+    content: '\f007';
+    font-family: 'Font Awesome 6 Free'; /* Assumed FA usage */
+    font-weight: 900;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--secondary);
+    pointer-events: none;
+}
+
+/* Dashboard Stats */
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border: 1px solid rgba(212, 165, 116, 0.2);
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px); /* Reduced hover lift */
+}
+
+.stat-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.8rem;
+    color: white;
+}
+
+.stat-sales { background: linear-gradient(135deg, #4a7c59, #5a9a6d); }
+.stat-orders { background: linear-gradient(135deg, #3498db, #2980b9); }
+.stat-customers { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+.stat-items { background: linear-gradient(135deg, #e67e22, #d35400); }
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    font-family: 'Playfair Display', serif;
+}
+
+.stat-label {
+    color: var(--secondary);
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+/* Tables */
+.lux-table {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border: 1px solid rgba(212, 165, 116, 0.2);
+    width: 100%; /* Ensure table takes full width of container */
+}
+
+.table-responsive {
+    overflow-x: auto; /* Allow horizontal scrolling for small screens */
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table thead {
+    background: linear-gradient(135deg, var(--primary), var(--dark));
+    color: white;
+}
+
+.table thead th {
+    border: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    padding: 1rem;
+    text-align: left;
+}
+
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(212, 165, 116, 0.2);
+}
+
+.table tbody tr:hover {
+    background: rgba(212, 165, 116, 0.05);
+}
+
+.badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-paid {
+    background: rgba(74, 124, 89, 0.2);
+    color: var(--success);
+}
+
+.badge-unpaid {
+    background: rgba(231, 76, 60, 0.2);
+    color: var(--danger);
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.btn-action {
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    margin-right: 0.5rem;
+}
+
+.btn-add { background: var(--success); color: white; }
+.btn-edit { background: linear-gradient(135deg, var(--danger), var(--spicy-red)); color: white; } /* HOT RED EDIT */
+.btn-delete { background: var(--danger); color: white; }
+.btn-clear { background: #95a5a6; color: white; }
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 /* Animations */
-.animate-fadeInUp {
-    animation: fadeInUp 0.6s ease-out;
-}
-
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -532,24 +775,113 @@ body {
     }
 }
 
-/* Responsive */
-@media (max-width: 992px) {
+.animate-fadeInUp {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* --- Responsive Overrides --- */
+
+/* Tablet & Smaller (Max 1023px) */
+@media (max-width: 1023px) {
+    /* Sidebar Behavior */
     .sidebar {
         transform: translateX(-100%);
+        width: 280px;
+        box-shadow: none; /* Remove shadow when hidden */
     }
-    .main-content {
-        margin-left: 0;
-    }
+
     .sidebar.show {
         transform: translateX(0);
+        box-shadow: 5px 0 20px rgba(0,0,0,0.4);
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 1.5rem;
+    }
+
+    .menu-toggle {
+        display: flex; /* Show the menu button */
+    }
+
+    /* Order Card - Make it less tall/sticky on smaller viewports */
+    .order-card {
+        max-height: 50vh;
+        top: 1rem;
+    }
+
+    /* Item Grid - 2 columns on tablet */
+    .item-grid-container {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     }
 }
 
-@media (max-width: 768px) {
+/* Mobile Devices (Max 767px) */
+@media (max-width: 767px) {
+    body {
+        font-size: 14px;
+    }
+
+    /* General Padding */
+    .main-content {
+        padding: 1rem;
+    }
+
+    /* Page Header */
     .page-title {
         font-size: 2rem;
     }
+
+    .page-subtitle {
+        font-size: 0.85rem;
+    }
+
+    /* Sidebar - Full width when open on mobile for clarity */
+    .sidebar.show {
+        width: 100%;
+        max-width: 300px; /* Max width for better reading flow */
+    }
+
+    /* Order Card - Remove stickiness, allow it to flow below items */
+    .order-card {
+        position: relative;
+        top: 0;
+        max-height: none;
+        margin-top: 2rem;
+    }
+
+    /* Item Grid - 1 large column for optimal mobile viewing */
+    .item-grid-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Login Card */
     .login-card {
         padding: 2rem 1.5rem;
+        margin: 1rem;
+    }
+
+    /* Table Responsiveness */
+    .table-responsive {
+        margin-top: 1rem;
+    }
+
+    /* Button stacking */
+    .btn-action {
+        display: block;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Desktop/Large Laptop (Min 1024px) */
+@media (min-width: 1024px) {
+    .sidebar {
+        transform: translateX(0); /* Ensure visible on large screens */
+    }
+
+    .main-content {
+        margin-left: 280px; /* Ensure main content respects fixed sidebar */
     }
 }

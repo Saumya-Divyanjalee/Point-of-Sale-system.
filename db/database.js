@@ -1,67 +1,154 @@
-// database.js
+// database.js - Spicy Stop (Sri Lanka) - Spicy Food & Snacks POS
 
-// Keys are no longer strictly needed but kept for structure identification
+// LocalStorage Keys (prefixed with shop name)
 const LS_KEYS = {
-    MENU_ITEMS: 'luxebrew_menuItems',
-    CUSTOMERS: 'luxebrew_customers',
-    ORDERS: 'luxebrew_orders',
+    MENU_ITEMS: 'spicystop_menuItems',
+    CUSTOMERS: 'spicystop_customers',
+    ORDERS: 'spicystop_orders',
 };
 
-// Default initial data
+// Default Spicy Sri Lankan Menu Items
 const INITIAL_ITEMS = [
-    { id: 'I001', name: 'Cappuccino', price: 450, stock: 50, image:'../images/cappuchino.jpg'},
-    { id: 'I002', name: 'Espresso', price: 350, stock: 80, image: '../images/espresso.jpg' },
-    { id: 'I003', name: 'Latte Macchiato', price: 480, stock: 40, image: '../images/Latte Macchiato.jpg' },
-    { id: 'I004', name: 'Chocolate Cake', price: 380, stock: 25, image: '../images/Chocolate Cake2.png' },
-    { id: 'I005', name: 'Croissant', price: 280, stock: 60, image: '../images/Croissant.jpg' },
-    { id: 'I006', name: 'Green Tea', price: 320, stock: 70, image: '../images/Green Tea.jpg' }
+    {
+        id: 'I001',
+        name: 'Kottu Roti (Chicken)',
+        price: 850,
+        stock: 30,
+        image: 'img/spicy-kottu.jpg',
+        category: 'Mains'
+    },
+    {
+        id: 'I002',
+        name: 'Spicy Egg Hopper',
+        price: 250,
+        stock: 50,
+        image: 'img/spycy-egg-hoppers.jpg',
+        category: 'Breakfast'
+    },
+    {
+        id: 'I003',
+        name: 'Beef Kottu',
+        price: 950,
+        stock: 25,
+        image: 'img/beef-kottu.jpg',
+        category: 'Mains'
+    },
+    {
+        id: 'I004',
+        name: 'Chili Cheese Kottu',
+        price: 1050,
+        stock: 20,
+        image: 'img/cheele-chees-kottu.jpg',
+        category: 'Mains'
+    },
+    {
+        id: 'I005',
+        name: 'Isso Wade (Prawn)',
+        price: 400,
+        stock: 40,
+        image: 'img/isso-wade.jpg',
+        category: 'Snacks'
+    },
+    {
+        id: 'I006',
+        name: 'Hot Butter Cuttlefish',
+        price: 1200,
+        stock: 15,
+        image: 'img/hot-butter.jpg',
+        category: 'Seafood'
+    },
+    {
+        id: 'I007',
+        name: 'Plain Hopper (3pcs)',
+        price: 180,
+        stock: 60,
+        image: 'img/hoppers.jpg',
+        category: 'Breakfast'
+    },
+    {
+        id: 'I008',
+        name: 'Pol Sambol',
+        price: 150,
+        stock: 100,
+        image: 'img/pol-sambol.jpg',
+        category: 'Sides'
+    },
+    {
+        id: 'I009',
+        name: 'Ginger Beer (Homemade)',
+        price: 280,
+        stock: 45,
+        image: 'img/soft-drinks.jpg',
+        category: 'Drinks'
+    },
+    {
+        id: 'I010',
+        name: 'Faluda',
+        price: 450,
+        stock: 35,
+        image: 'img/faluda.jpg',
+        category: 'Desserts'
+    }
 ];
 
-// In-memory data storage (arrays)
-let menuItems = [...INITIAL_ITEMS]; // Use spread to create a true copy
+// In-memory data storage
+let menuItems = [...INITIAL_ITEMS];
 let customers = [];
 let orders = [];
 
-// Functions to interact with in-memory arrays
+// Load data from in-memory store
 function loadData(key) {
-    if (key === LS_KEYS.MENU_ITEMS) return menuItems;
-    if (key === LS_KEYS.CUSTOMERS) return customers;
-    if (key === LS_KEYS.ORDERS) return orders;
-    return [];
+    switch (key) {
+        case LS_KEYS.MENU_ITEMS: return menuItems;
+        case LS_KEYS.CUSTOMERS: return customers;
+        case LS_KEYS.ORDERS: return orders;
+        default: return [];
+    }
 }
 
+// Save data to in-memory store
 function saveData(key, data) {
-    if (key === LS_KEYS.MENU_ITEMS) menuItems = data;
-    if (key === LS_KEYS.CUSTOMERS) customers = data;
-    if (key === LS_KEYS.ORDERS) orders = data;
+    switch (key) {
+        case LS_KEYS.MENU_ITEMS: menuItems = Array.isArray(data) ? data : []; break;
+        case LS_KEYS.CUSTOMERS: customers = Array.isArray(data) ? data : []; break;
+        case LS_KEYS.ORDERS: orders = Array.isArray(data) ? data : []; break;
+    }
 }
 
+// Exported DB Object
 export const db = {
-    // Items CRUD
+    // Menu Items CRUD
     getItems: () => loadData(LS_KEYS.MENU_ITEMS),
     saveItems: (items) => saveData(LS_KEYS.MENU_ITEMS, items),
 
     // Customers CRUD
     getCustomers: () => loadData(LS_KEYS.CUSTOMERS),
-    saveCustomers: (customers) => saveData(LS_KEYS.CUSTOMERS, customers),
+    saveCustomers: (custs) => saveData(LS_KEYS.CUSTOMERS, custs),
 
     // Orders CRUD
     getOrders: () => loadData(LS_KEYS.ORDERS),
-    saveOrders: (orders) => saveData(LS_KEYS.ORDERS, orders),
+    saveOrders: (ords) => saveData(LS_KEYS.ORDERS, ords),
 
-    // Get Next ID Helper
-    getNextId: (key, prefix) => {
-        const data = loadData(key, []);
-        // Find the highest number to generate the next ID
-        const lastIdNum = data.reduce((max, item) => {
-            const idNumberMatch = item.id ? item.id.match(/\d+$/) : null;
-            if (idNumberMatch) {
-                const currentNum = parseInt(idNumberMatch[0]);
-                return Math.max(max, currentNum);
-            }
-            return max;
-        }, 0);
+    // Generate next ID (e.g., I011, C001, O001)
+    getNextId: (key, prefix = 'I') => {
+        const data = loadData(key);
+        if (!Array.isArray(data) || data.length === 0) {
+            return `${prefix}001`;
+        }
 
-        return prefix + String(lastIdNum + 1).padStart(3, '0');
+        const numbers = data
+            .map(item => {
+                const match = item.id?.match(new RegExp(`^${prefix}(\\d+)$`));
+                return match ? parseInt(match[1], 10) : 0;
+            })
+            .filter(num => !isNaN(num));
+
+        const maxNum = numbers.length > 0 ? Math.max(...numbers) : 0;
+        return `${prefix}${String(maxNum + 1).padStart(3, '0')}`;
+    },
+
+    // Reset to initial spicy menu (useful for demo/reset)
+    resetMenu: () => {
+        menuItems = [...INITIAL_ITEMS];
     }
 };

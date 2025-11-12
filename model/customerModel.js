@@ -2,8 +2,8 @@
 import { db } from '../db/database.js';
 import { CustomerDTO } from '../dto/CustomerDTO.js';
 
-const CUSTOMER_PREFIX = 'C';
-const CUSTOMER_KEY = 'luxebrew_customers';
+const CUSTOMER_PREFIX = 'SC';
+const CUSTOMER_KEY = 'spicy-stop_customer';
 
 export class CustomerModel {
     static getAll() {
