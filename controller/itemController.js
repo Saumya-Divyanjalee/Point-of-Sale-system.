@@ -1,173 +1,146 @@
-// Item Controller - Handles item/product operations
-const itemController = {
-    // Initialize controller
-    init() {
-        this.loadItems();
-    },
+import ItemModel from "../model/itemModel.js";
+import {item_array} from "../db/database.js";
+import {setDataDropdowns} from "./orderController.js";
+import {setTotalValues} from "./dashboardController.js";
+import {PRICE,QTY} from "../util/regex.js";
+import {setAlert} from "../util/alert.js";
 
-    // Load and display items
-    loadItems() {
-        try {
-            const items = ItemModel.getAll();
-            this.renderTable(items);
-            this.renderGrid(items);
+let itemBody = $("#item-table-body");
+let itemId = $("#inputItemId");
+let itemModel = $("#inputModel");
+let itemPrice = $("#inputPrice");
+let itemQty = $("#inputQuantity");
 
-            // Update dashboard if available
-            if (typeof dashboardController !== 'undefined') {
-                dashboardController.update();
-            }
-        } catch (error) {
-            AlertUtil.showError('Failed to load items: ' + error.message);
-        }
-    },
-
-    // Render items table
-    renderTable(items) {
-        const tbody = document.getElementById('itemTableBody');
-        if (!tbody) return;
-
-        if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5"><div class="empty-state"><i class="fas fa-cake"></i><p>No items added yet</p></div></td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = items.map(i => `
-            <tr>
-                <td>${i.code}</td>
-                <td>${i.name}</td>
-                <td>$${parseFloat(i.price).toFixed(2)}</td>
-                <td><span class="badge ${i.qty < 5 ? 'bg-danger' : 'bg-info'}">${i.qty}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="itemController.openEditModal(${i.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="itemController.deleteItem(${i.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    },
-
-    // Render items grid for order page
-    renderGrid(items) {
-        const grid = document.getElementById('itemGrid');
-        if (!grid) return;
-
-        if (items.length === 0) {
-            grid.innerHTML = '<div class="col-12"><div class="empty-state"><i class="fas fa-cake"></i><p>No items available</p></div></div>';
-            return;
-        }
-
-        grid.innerHTML = items.map(i => `
-            <div class="col-md-4 col-sm-6">
-                <div class="card item-card ${i.qty === 0 ? 'opacity-50' : ''}" onclick="itemController.selectItemForOrder(${i.id})">
-                    <div class="card-body text-center">
-                        <i class="fas fa-birthday-cake fa-3x text-primary mb-3"></i>
-                        <h6>${i.name}</h6>
-                        <p class="mb-1 text-muted">${i.code}</p>
-                        <h5 class="text-primary">$${parseFloat(i.price).toFixed(2)}</h5>
-                        <small class="${i.qty < 5 ? 'text-danger' : 'text-muted'}">
-                            Stock: ${i.qty} ${i.qty === 0 ? '(Out of Stock)' : ''}
-                        </small>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    },
-
-    // Open modal to add new item
-    openAddModal() {
-        document.getElementById('itemModalTitle').textContent = 'Add Item';
-        document.getElementById('itemId').value = '';
-        document.getElementById('itemCode').value = '';
-        document.getElementById('itemName').value = '';
-        document.getElementById('itemPrice').value = '';
-        document.getElementById('itemQty').value = '';
-    },
-
-    // Open modal to edit item
-    openEditModal(id) {
-        try {
-            const item = ItemModel.getById(id);
-            document.getElementById('itemModalTitle').textContent = 'Edit Item';
-            document.getElementById('itemId').value = item.id;
-            document.getElementById('itemCode').value = item.code;
-            document.getElementById('itemName').value = item.name;
-            document.getElementById('itemPrice').value = item.price;
-            document.getElementById('itemQty').value = item.qty;
-
-            const modal = new bootstrap.Modal(document.getElementById('itemModal'));
-            modal.show();
-        } catch (error) {
-            AlertUtil.showError(error.message);
-        }
-    },
-
-    // Save item (add or update)
-    saveItem() {
-        try {
-            const code = document.getElementById('itemCode').value.trim();
-            const name = document.getElementById('itemName').value.trim();
-            const price = document.getElementById('itemPrice').value;
-            const qty = document.getElementById('itemQty').value;
-            const id = document.getElementById('itemId').value;
-
-            if (!code || !name || !price || !qty) {
-                AlertUtil.showError('Please fill in all required fields');
-                return;
-            }
-
-            const item = { code, name, price, qty };
-
-            if (id) {
-                // Update existing item
-                ItemModel.update(parseInt(id), item);
-                AlertUtil.showSuccess('Item updated successfully');
-            } else {
-                // Add new item
-                ItemModel.add(item);
-                AlertUtil.showSuccess('Item added successfully');
-            }
-
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('itemModal'));
-            modal.hide();
-
-            // Reload items
-            this.loadItems();
-        } catch (error) {
-            AlertUtil.showError(error.message);
-        }
-    },
-
-    // Delete item
-    deleteItem(id) {
-        try {
-            if (AlertUtil.confirm('Are you sure you want to delete this item?')) {
-                ItemModel.delete(id);
-                AlertUtil.showSuccess('Item deleted successfully');
-                this.loadItems();
-            }
-        } catch (error) {
-            AlertUtil.showError(error.message);
-        }
-    },
-
-    // Select item for order (delegates to orderController)
-    selectItemForOrder(itemId) {
-        if (typeof orderController !== 'undefined') {
-            orderController.selectItem(itemId);
-        }
-    },
-
-    // Search items
-    searchItems(query) {
-        try {
-            const items = ItemModel.search(query);
-            this.renderTable(items);
-        } catch (error) {
-            AlertUtil.showError('Search failed: ' + error.message);
-        }
+// save button action
+$("#item-save").on("click", function() {
+    if (validationItemInputs()){
+        const item = new ItemModel(itemId.val(),itemModel.val(),itemPrice.val(),itemQty.val());
+        item_array.push(item);
+        loadItemData();
+        clearItemInputs();
+        setDataDropdowns();
+        setItemID();
+        setTotalValues();
+        setAlert('success','Inventory Saved Successfully!!');
     }
-};
+});
+
+// set Item ID
+let setItemID = () => {
+    if (item_array.length === 0) {
+        itemId.val(1);
+    } else {
+        itemId.val(parseInt(item_array[item_array.length - 1].item_id) + 1);
+    }
+}
+
+setItemID();
+
+let clearItemInputs = () => {
+    itemModel.val("");
+    itemPrice.val("");
+    itemQty.val("");
+    $("#input-search-item-id").val("");
+}
+
+// item table add data
+export let loadItemData = () => {
+    itemBody.children().remove();
+
+    item_array.map((value,index) => {
+        let data = `<tr><td>${value.item_id}</td><td>${value.model}</td><td>${value.price}</td><td>${value.qty}</td></tr>`;
+        itemBody.append(data);
+    });
+}
+
+// item table click row get data
+itemBody.on('click', 'tr', function () {
+    const row = $(this);
+    console.log(row.index());
+
+    let item = item_array[row.index()];
+    setItemDataInput(item);
+});
+
+let setItemDataInput = (item) => {
+    itemId.val(item.item_id);
+    itemModel.val(item.model);
+    itemPrice.val(item.price);
+    itemQty.val(item.qty);
+}
+
+$("#item-clear").on("click", function() {
+    clearItemInputs();
+});
+
+$("#item-delete").on("click", function() {
+    let deletedId = itemId.val();
+    item_array.map((value,index) => {
+        if (value.item_id === deletedId) {
+            item_array.splice(index, 1);
+            setAlert('success','Inventory Delete Successfully!!');
+        }
+    })
+    loadItemData();
+    clearItemInputs();
+    setTotalValues();
+    setItemID();
+});
+
+$("#item-update").on("click", function() {
+    if (validationItemInputs()){
+        let updateId = itemId.val();
+
+        item_array.map((value, index) => {
+            if (value.item_id === updateId) {
+                item_array[index].model = itemModel.val();
+                item_array[index].price = itemPrice.val();
+                item_array[index].qty = itemQty.val();
+                setAlert('success','Inventory Update Successfully!!');
+            }
+        });
+
+        loadItemData();
+        clearItemInputs();
+        setItemID();
+    }
+});
+
+$("#view-all-items").on("click", function() {
+    loadItemData();
+    $("#input-search-item-id").val("");
+});
+
+$("#search-item").on("click", function() {
+    let searchId = $("#input-search-item-id").val();
+
+    if (QTY.test(searchId)){
+        item_array.map((value,index) => {
+            if (value.item_id === searchId) {
+                itemBody.children().remove();
+
+                let data = `<tr><td>${value.item_id}</td><td>${value.model}</td><td>${value.price}</td><td>${value.qty}</td></tr>`;
+                itemBody.append(data);
+            }
+        });
+    } else {
+        setAlert('error','Invalid Inventory ID !!');
+    }
+});
+
+let validationItemInputs = () => {
+    if (itemModel.val() !== "") {
+        if (PRICE.test(itemPrice.val())) {
+            if (QTY.test(itemQty.val())) {
+                return true;
+            } else {
+                setAlert('error','Invalid Quantity !!');
+            }
+        } else {
+            setAlert('error','Invalid Price !!');
+        }
+    } else {
+        setAlert('error','Invalid Inventory Model !!');
+    }
+    return false;
+}

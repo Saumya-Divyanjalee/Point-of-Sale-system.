@@ -1,308 +1,200 @@
-// Order Controller - Handles order operations
-const orderController = {
-    currentOrder: {
-        customerId: null,
-        items: []
-    },
+import {customers_array, item_array,order_array} from "../db/database.js";
+import OrderModel from "../model/orderModel.js";
+import OrderItemModel from "../model/orderItemModel.js";
+import {setTotalValues,loadAllOrders} from "./dashboardController.js";
+import {loadItemData} from "./itemController.js";
+import {PRICE, QTY} from "../util/regex.js";
+import {setAlert} from "../util/alert.js";
 
-    // Initialize controller
-    init() {
-        this.loadOrders();
-        this.setupEventListeners();
-    },
+let orderId = $("#inputOrderId");
+let customerId = $("#inputCustomerId");
+let customerName = $("#inputCustomerName");
+let inputDate = $("#inputDate");
+let inventoryIdDropDown = $("#inputInventoryId");
+let inventoryModel = $("#inputOrderModel");
+let inventoryPrice = $("#inputOrderPrice");
+let onHandQty = $("#inputOnHandQty");
+let orderQty = $("#inputOrderQty");
+let addBtn = $("#addBtn");
+let orderDetailTblBody = $("#orderDetailTblBody");
+let inputTotal = $("#inputTotal");
 
-    // Setup event listeners
-    setupEventListeners() {
-        const customerSelect = document.getElementById('orderCustomerSelect');
-        if (customerSelect) {
-            customerSelect.addEventListener('change', (e) => {
-                this.currentOrder.customerId = e.target.value ? parseInt(e.target.value) : null;
-            });
-        }
-    },
+// set date
+const date = new Date();
+const formattedDate = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+inputDate.val(formattedDate);
 
-    // Select item to add to order
-    selectItem(itemId) {
-        try {
-            const item = ItemModel.getById(itemId);
+//set order ID
+let setOrderID = () => {
+    if (order_array.length === 0){
+        orderId.val(1);
+    } else {
+        console.log(parseInt(order_array[order_array.length - 1].orderId) + 1)
+        orderId.val(order_array[order_array.length - 1].orderId + 1);
+    }
+}
+setOrderID();
 
-            if (item.qty === 0) {
-                AlertUtil.showWarning('Item is out of stock');
-                return;
-            }
+// set total
+function setTotal(){
+    const lastColumnData = [];
+    $('#orderDetailTblBody tr').each(function() {
+        //lastColumnData.splice(0, lastColumnData.length);
+        const totalCell = $(this).find('td:nth-child(5)');
+        lastColumnData.push(totalCell.text());
+    });
 
-            const existingItem = this.currentOrder.items.find(i => i.id === itemId);
+    let total = 0;
+    lastColumnData.map(value => {
+        total += parseFloat(value);
+    });
+    inputTotal.val(total);
+}
 
-            if (existingItem) {
-                if (existingItem.orderQty < item.qty) {
-                    existingItem.orderQty++;
-                } else {
-                    AlertUtil.showWarning('Cannot add more than available stock');
-                    return;
-                }
-            } else {
-                this.currentOrder.items.push({
-                    id: item.id,
-                    code: item.code,
-                    name: item.name,
-                    price: item.price,
-                    qty: item.qty,
-                    orderQty: 1
-                });
-            }
+// add button action
+addBtn.on("click", function() {
+    if (QTY.test(orderQty.val())){
+        let data = `<tr><td>${inventoryIdDropDown.text()}</td><td>${inventoryModel.val()}</td><td>${inventoryPrice.val()}</td><td>${orderQty.val()}</td><td>${parseFloat(inventoryPrice.val()) * parseInt(orderQty.val()).toFixed(2)}</td><td><button class="btn btn-danger btn-sm delete-btn">Delete</button></td></tr>`;
+        orderDetailTblBody.append(data);
+        setTotal();
+        inventoryIdDropDown.text("Inventory ID");
+        inventoryModel.val("");
+        inventoryPrice.val("");
+        onHandQty.val("");
+        orderQty.val("");
+    } else {
+        setAlert('error','Invalid Order Quantity !!');
+    }
+});
 
-            this.updateOrderSummary();
-        } catch (error) {
-            AlertUtil.showError(error.message);
-        }
-    },
+// Event delegation for delete button
+orderDetailTblBody.on('click', '.delete-btn', function() {
+    let row = $(this).closest('tr');
+    setAlert('warning','Do you want to remove this order item?',row);
+});
 
-    // Update quantity of item in order
-    updateQty(itemId, newQty) {
-        try {
-            const orderItem = this.currentOrder.items.find(i => i.id === itemId);
-            if (!orderItem) return;
+// customer id eka click kla wita button eke text eka set wenw
+$("#customerIds").on("click", "li", function() {
+    const selectId = $(this);
+    customerId.text(selectId.text());
+    customerName.val(customers_array[selectId.text()-1].name); // meka hriynne na
+});
 
-            newQty = parseInt(newQty);
+// item id eka click kla wita button eke text eka set wenw
+$("#itemIds").on("click", "li", function() {
+    const selectId = $(this);
+    inventoryIdDropDown.text(selectId.text());  // meka hriynne na
+    inventoryModel.val(item_array[selectId.text()-1].model);
+    inventoryPrice.val(item_array[selectId.text()-1].price);
+    onHandQty.val(item_array[selectId.text()-1].qty);
+});
 
-            if (newQty < 1) {
-                this.removeItem(itemId);
-                return;
-            }
+export let setDataDropdowns = () => {
+    // customer ids tika dropdown ekt set wenw
+    $("#customerIds").empty();
+    customers_array.forEach((value,index) => {
+        console.log("value.customer_id");
+        let data = `<li>${value.customer_id}</li>`;
+        $("#customerIds").append(data);
+    });
+    console.log(customers_array);
 
-            if (newQty > orderItem.qty) {
-                AlertUtil.showWarning('Cannot exceed available stock');
-                return;
-            }
+    // item ids tika dropdown ekt set wenw
+    $("#itemIds").empty();
+    item_array.map((value,index) => {
+        let data = `<li>${value.item_id}</li>`;
+        $("#itemIds").append(data);
+    });
+}
 
-            orderItem.orderQty = newQty;
-            this.updateOrderSummary();
-        } catch (error) {
-            AlertUtil.showError(error.message);
-        }
-    },
+setDataDropdowns();
 
-    // Remove item from order
-    removeItem(itemId) {
-        this.currentOrder.items = this.currentOrder.items.filter(i => i.id !== itemId);
-        this.updateOrderSummary();
-    },
-
-    // Update order summary display
-    updateOrderSummary() {
-        const list = document.getElementById('orderItemsList');
-        if (!list) return;
-
-        if (this.currentOrder.items.length === 0) {
-            list.innerHTML = '<div class="empty-state"><i class="fas fa-shopping-cart"></i><p>No items selected</p></div>';
+// discount input enter action
+let subTotal = 0;
+$('#inputDiscount').on('keydown', function(event) {
+    if (event.key === 'Enter' || event.keyCode === 13) {
+        // Action to perform when Enter is pressed
+        let discountValue = $('#inputDiscount').val();
+        if (discountValue.slice(-1) === '%') {
+            discountValue = discountValue.slice(0, -1);
+            subTotal = parseFloat(inputTotal.val()) - (parseFloat(inputTotal.val()) * parseFloat(discountValue) / 100);
+            $("#inputSubTotal").val(subTotal.toFixed(2));
         } else {
-            list.innerHTML = this.currentOrder.items.map(i => `
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="flex-grow-1">
-                        <strong>${i.name}</strong>
-                        <div class="input-group input-group-sm mt-1">
-                            <button class="btn btn-outline-secondary" onclick="orderController.updateQty(${i.id}, ${i.orderQty - 1})">-</button>
-                            <input type="number" class="form-control text-center" value="${i.orderQty}" min="1" max="${i.qty}" onchange="orderController.updateQty(${i.id}, this.value)">
-                            <button class="btn btn-outline-secondary" onclick="orderController.updateQty(${i.id}, ${i.orderQty + 1})">+</button>
-                        </div>
-                    </div>
-                    <div class="text-end ms-2">
-                        <div>$${(i.price * i.orderQty).toFixed(2)}</div>
-                        <button class="btn btn-sm btn-danger mt-1" onclick="orderController.removeItem(${i.id})">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+            subTotal = parseFloat(inputTotal.val()) - parseFloat(discountValue);
+            $("#inputSubTotal").val(subTotal.toFixed(2));
         }
 
-        // Calculate totals
-        const subtotal = this.currentOrder.items.reduce((sum, item) => sum + (item.price * item.orderQty), 0);
-        const tax = OrderModel.calculateTax(subtotal);
-        const total = OrderModel.calculateTotal(subtotal, tax);
+    }
+});
 
-        document.getElementById('orderSubtotal').textContent = `$${subtotal.toFixed(2)}`;
-        document.getElementById('orderTax').textContent = `$${tax.toFixed(2)}`;
-        document.getElementById('orderTotal').textContent = `$${total.toFixed(2)}`;
-    },
-
-    // Place order
-    placeOrder() {
-        try {
-            if (!this.currentOrder.customerId) {
-                AlertUtil.showError('Please select a customer');
-                return;
-            }
-
-            if (this.currentOrder.items.length === 0) {
-                AlertUtil.showError('Please add items to the order');
-                return;
-            }
-
-            const customer = CustomerModel.getById(this.currentOrder.customerId);
-
-            const subtotal = this.currentOrder.items.reduce((sum, item) => sum + (item.price * item.orderQty), 0);
-            const tax = OrderModel.calculateTax(subtotal);
-            const total = OrderModel.calculateTotal(subtotal, tax);
-
-            const order = {
-                customerId: this.currentOrder.customerId,
-                customerName: customer.name,
-                customerContact: customer.contact,
-                items: this.currentOrder.items.map(i => ({
-                    id: i.id,
-                    code: i.code,
-                    name: i.name,
-                    price: i.price,
-                    qty: i.orderQty
-                })),
-                subtotal,
-                tax,
-                total
-            };
-
-            // Update stock for each item
-            this.currentOrder.items.forEach(item => {
-                ItemModel.updateStock(item.id, item.orderQty);
-            });
-
-            // Add order
-            const savedOrder = OrderModel.add(order);
-
-            AlertUtil.showSuccess(`Order placed successfully! Order ID: #${savedOrder.id}`);
-
-            // Clear and refresh
-            this.clearOrder();
-            this.loadOrders();
-
-            if (typeof itemController !== 'undefined') {
-                itemController.loadItems();
-            }
-            if (typeof dashboardController !== 'undefined') {
-                dashboardController.update();
-            }
-        } catch (error) {
-            AlertUtil.showError(error.message);
-        }
-    },
-
-    // Clear current order
-    clearOrder() {
-        this.currentOrder = {
-            customerId: null,
-            items: []
-        };
-
-        const customerSelect = document.getElementById('orderCustomerSelect');
-        if (customerSelect) {
-            customerSelect.value = '';
-        }
-
-        this.updateOrderSummary();
-    },
-
-    // Load order history
-    loadOrders() {
-        try {
-            const orders = OrderModel.getAll();
-            this.renderHistory(orders);
-        } catch (error) {
-            AlertUtil.showError('Failed to load orders: ' + error.message);
-        }
-    },
-
-    // Render order history
-    renderHistory(orders) {
-        const tbody = document.getElementById('historyTableBody');
-        if (!tbody) return;
-
-        if (orders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5"><div class="empty-state"><i class="fas fa-history"></i><p>No orders placed yet</p></div></td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = orders.map(o => `
-            <tr>
-                <td>#${o.id}</td>
-                <td>${o.customerName}</td>
-                <td>${new Date(o.date).toLocaleString()}</td>
-                <td>${o.items.length} items</td>
-                <td><strong>$${o.total.toFixed(2)}</strong></td>
-                <td>
-                    <button class="btn btn-sm btn-info" onclick="orderController.viewDetails(${o.id})">
-                        <i class="fas fa-eye"></i> View
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    },
-
-    // View order details
-    viewDetails(orderId) {
-        try {
-            const order = OrderModel.getById(orderId);
-
-            const content = `
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <strong>Order ID:</strong> #${order.id}
-                    </div>
-                    <div class="col-6">
-                        <strong>Date:</strong> ${new Date(order.date).toLocaleString()}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <strong>Customer:</strong> ${order.customerName}
-                    </div>
-                    <div class="col-6">
-                        <strong>Contact:</strong> ${order.customerContact}
-                    </div>
-                </div>
-                <hr>
-                <h6>Order Items:</h6>
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Code</th>
-                            <th>Price</th>
-                            <th>Qty</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${order.items.map(i => `
-                            <tr>
-                                <td>${i.name}</td>
-                                <td>${i.code}</td>
-                                <td>$${i.price.toFixed(2)}</td>
-                                <td>${i.qty}</td>
-                                <td>$${(i.price * i.qty).toFixed(2)}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-                <hr>
-                <div class="row">
-                    <div class="col-6 text-end"><strong>Subtotal:</strong></div>
-                    <div class="col-6 text-end">$${order.subtotal.toFixed(2)}</div>
-                </div>
-                <div class="row">
-                    <div class="col-6 text-end"><strong>Tax (10%):</strong></div>
-                    <div class="col-6 text-end">$${order.tax.toFixed(2)}</div>
-                </div>
-                <div class="row mt-2">
-                    <div class="col-6 text-end"><h5>Total:</h5></div>
-                    <div class="col-6 text-end"><h5 class="text-primary">$${order.total.toFixed(2)}</h5></div>
-                </div>
-            `;
-
-            document.getElementById('orderDetailsContent').innerHTML = content;
-            const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
-            modal.show();
-        } catch (error) {
-            AlertUtil.showError(error.message);
+// set balance cash input enter action
+$('#inputCash').on('keydown', function(event) {
+    if (event.key === 'Enter' || event.keyCode === 13) {
+        if (PRICE.test($('#inputCash').val())){
+            $("#inputBalance").val((parseFloat($('#inputCash').val()) - parseFloat($("#inputSubTotal").val())).toFixed(2));
+        } else {
+            setAlert('error','Invalid Cash Price !!');
         }
     }
-};
+});
+
+// place order button action
+$("#place-order-btn").on("click", function() {
+    if ($("#inputSubTotal").val() !== ""){
+        saveOrder();
+        setOrderID();
+        clearFrom();
+        setTotalValues();
+        loadAllOrders();
+        loadItemData();
+        setAlert('success','Order Placed Successfully!!');
+    }
+});
+
+// set order
+let saveOrder = () => {
+    let orderItems = [];
+    $('#orderDetailTblBody tr').each(function() {
+        // Get the Inventory ID and Quantity for each row
+        let itemId = $(this).find('td').eq(0).text();  // First column (Inventory ID)
+        let quantity = $(this).find('td').eq(3).text();      // Fourth column (Quantity)
+
+        item_array.map((value,index) => {
+            if (value.item_id === itemId){
+                value.qty -= quantity;
+            }
+        });
+
+        const orderItemModel = new OrderItemModel(parseInt(itemId),parseInt(quantity));
+        orderItems.push(orderItemModel);
+    });
+    const order = new OrderModel(parseInt(orderId.val()),parseInt(customerId.text()),inputDate.val(),parseFloat($("#inputSubTotal").val()),orderItems);
+    order_array.push(order);
+    console.log(order_array);
+}
+
+//set clear form
+let clearFrom = () => {
+    customerId.text("Customer ID");
+    customerName.val("");
+    inventoryIdDropDown.text("Inventory ID");
+    inventoryModel.val("");
+    inventoryPrice.val("");
+    onHandQty.val("");
+    orderQty.val("");
+    orderDetailTblBody.children().remove();
+    inputTotal.val("");
+    $('#inputDiscount').val("");
+    $("#inputSubTotal").val("");
+    $('#inputCash').val("");
+    $("#inputBalance").val("");
+}
+
+$("#clear-btn").on('click',function (){
+    clearFrom();
+});
+
+$("#new-btn").on('click', function (){
+    clearFrom();
+    setOrderID();
+})

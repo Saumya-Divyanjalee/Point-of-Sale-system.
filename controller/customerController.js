@@ -1,145 +1,174 @@
-// Customer Controller - Handles customer operations
-const customerController = {
-    // Initialize controller
-    init() {
-        this.loadCustomers();
-    },
+import CustomerModel from "../model/customerModel.js";
+import {customers_array} from "../db/database.js";
+import {setDataDropdowns} from "./orderController.js"
+import {loadAllOrders, setTotalValues} from "./dashboardController.js";
+import {NAME, NIC, EMAIL, TEL, QTY} from "../util/regex.js";
+import {setAlert} from "../util/alert.js";
 
-    // Load and display customers
-    loadCustomers() {
-        try {
-            const customers = CustomerModel.getAll();
-            this.renderTable(customers);
-            this.renderDropdown(customers);
+let cusBody = $("#customer-tbl-body");
+let cusId = $("#inputId");
+let cusName = $("#inputName");
+let cusAddress = $("#inputAddress");
+let cusNic = $("#inputNic");
+let cusEmail = $("#inputEmail");
+let cusTel = $("#inputTel");
 
-            // Update dashboard if available
-            if (typeof dashboardController !== 'undefined') {
-                dashboardController.update();
-            }
-        } catch (error) {
-            AlertUtil.showError('Failed to load customers: ' + error.message);
-        }
-    },
-
-    // Render customer table
-    renderTable(customers) {
-        const tbody = document.getElementById('customerTableBody');
-        if (!tbody) return;
-
-        if (customers.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5"><div class="empty-state"><i class="fas fa-users"></i><p>No customers added yet</p></div></td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = customers.map(c => `
-            <tr>
-                <td>${c.id}</td>
-                <td>${c.name}</td>
-                <td>${c.contact}</td>
-                <td>${c.address || '-'}</td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="customerController.openEditModal(${c.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="customerController.deleteCustomer(${c.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    },
-
-    // Render customer dropdown for orders
-    renderDropdown(customers) {
-        const select = document.getElementById('orderCustomerSelect');
-        if (!select) return;
-
-        select.innerHTML = '<option value="">-- Select Customer --</option>' +
-            customers.map(c => `<option value="${c.id}">${c.name} - ${c.contact}</option>`).join('');
-    },
-
-    // Open modal to add new customer
-    openAddModal() {
-        document.getElementById('customerModalTitle').textContent = 'Add Customer';
-        document.getElementById('customerId').value = '';
-        document.getElementById('customerName').value = '';
-        document.getElementById('customerContact').value = '';
-        document.getElementById('customerAddress').value = '';
-    },
-
-    // Open modal to edit customer
-    openEditModal(id) {
-        try {
-            const customer = CustomerModel.getById(id);
-            document.getElementById('customerModalTitle').textContent = 'Edit Customer';
-            document.getElementById('customerId').value = customer.id;
-            document.getElementById('customerName').value = customer.name;
-            document.getElementById('customerContact').value = customer.contact;
-            document.getElementById('customerAddress').value = customer.address || '';
-
-            const modal = new bootstrap.Modal(document.getElementById('customerModal'));
-            modal.show();
-        } catch (error) {
-            AlertUtil.showError(error.message);
-        }
-    },
-
-    // Save customer (add or update)
-    saveCustomer() {
-        try {
-            const name = document.getElementById('customerName').value.trim();
-            const contact = document.getElementById('customerContact').value.trim();
-            const address = document.getElementById('customerAddress').value.trim();
-            const id = document.getElementById('customerId').value;
-
-            if (!name || !contact) {
-                AlertUtil.showError('Please fill in all required fields');
-                return;
-            }
-
-            const customer = { name, contact, address };
-
-            if (id) {
-                // Update existing customer
-                CustomerModel.update(parseInt(id), customer);
-                AlertUtil.showSuccess('Customer updated successfully');
-            } else {
-                // Add new customer
-                CustomerModel.add(customer);
-                AlertUtil.showSuccess('Customer added successfully');
-            }
-
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('customerModal'));
-            modal.hide();
-
-            // Reload customers
-            this.loadCustomers();
-        } catch (error) {
-            AlertUtil.showError(error.message);
-        }
-    },
-
-    // Delete customer
-    deleteCustomer(id) {
-        try {
-            if (AlertUtil.confirm('Are you sure you want to delete this customer?')) {
-                CustomerModel.delete(id);
-                AlertUtil.showSuccess('Customer deleted successfully');
-                this.loadCustomers();
-            }
-        } catch (error) {
-            AlertUtil.showError(error.message);
-        }
-    },
-
-    // Search customers
-    searchCustomers(query) {
-        try {
-            const customers = CustomerModel.search(query);
-            this.renderTable(customers);
-        } catch (error) {
-            AlertUtil.showError('Search failed: ' + error.message);
-        }
+// save button action
+$("#customer-save").on("click", function() {
+    if (validationCustomerInput()){
+        const customer = new CustomerModel(cusId.val(),cusName.val(),cusAddress.val(),cusNic.val(),cusEmail.val(),cusTel.val())
+        customers_array.push(customer);
+        loadCustomerData();
+        clearCustomerInputs();
+        setDataDropdowns();
+        setCustomerID();
+        setTotalValues();
+        setAlert('success','Customer Saved Successfully!!');
     }
-};
+});
+
+// set Customer ID
+let setCustomerID = () => {
+    if (customers_array.length === 0) {
+        cusId.val(1);
+    } else {
+        cusId.val(parseInt(customers_array[customers_array.length - 1].customer_id) + 1);
+    }
+}
+
+setCustomerID();
+
+let clearCustomerInputs = () => {
+    cusName.val("");
+    cusAddress.val("");
+    cusNic.val("");
+    cusEmail.val("");
+    cusTel.val("");
+    $("#input-search-customer-id").val("");
+}
+
+// customer table add data
+let loadCustomerData = () => {
+    cusBody.children().remove();
+
+    customers_array.map((value,index) => {
+        let data = `<tr><td>${value.customer_id}</td><td>${value.name}</td><td>${value.address}</td><td>${value.nic}</td><td>${value.email}</td><td>${value.tel}</td></tr>`;
+        cusBody.append(data);
+    });
+}
+
+loadCustomerData();
+
+// customer table click row get data
+cusBody.on('click', 'tr', function () {
+    const row = $(this);
+    console.log(row.index());
+
+    // const customer = {
+    //     customer_id: row.children().eq(0).text(),
+    //     name: row.children().eq(1).text(),
+    //     address: row.children().eq(2).text(),
+    //     nic: row.children().eq(3).text(),
+    //     email: row.children().eq(4).text(),
+    //     tel: row.children().eq(5).text()
+    // };
+
+    let customer = customers_array[row.index()];
+    setCustomerDataInput(customer);
+    console.log(customer);
+});
+
+let setCustomerDataInput = (customer) => {
+    cusId.val(customer.customer_id);
+    cusName.val(customer.name);
+    cusAddress.val(customer.address);
+    cusNic.val(customer.nic);
+    cusEmail.val(customer.email);
+    cusTel.val(customer.tel);
+}
+
+$("#customer-clear").on("click", function() {
+    clearCustomerInputs();
+});
+
+$("#customer-delete").on("click", function() {
+    let deletedId = cusId.val();
+    customers_array.map((value,index) => {
+        if (value.customer_id === deletedId) {
+            customers_array.splice(index, 1);
+            setAlert('success','Customer Delete Successfully!!');
+        }
+    });
+    loadCustomerData();
+    clearCustomerInputs();
+    setTotalValues();
+    setCustomerID();
+});
+
+$("#customer-update").on("click", function() {
+    let updateId = cusId.val();
+
+    if (validationCustomerInput()){
+        customers_array.forEach((value, index) => {
+            if (value.customer_id === updateId) {
+                customers_array[index].name = cusName.val();
+                customers_array[index].address = cusAddress.val();
+                customers_array[index].nic = cusNic.val();
+                customers_array[index].email = cusEmail.val();
+                customers_array[index].tel = cusTel.val();
+                setAlert('success','Customer Updated Successfully!!');
+            }
+        });
+
+        loadCustomerData();
+        clearCustomerInputs();
+        setCustomerID();
+    }
+});
+
+$("#view-all-customer").on("click", function() {
+    loadCustomerData();
+    $("#input-search-customer-id").val("");
+});
+
+$("#search-customer").on("click", function() {
+    let searchId = $("#input-search-customer-id").val();
+
+    if (QTY.test(searchId)){
+        customers_array.map((value,index) => {
+            if (value.customer_id === searchId) {
+                cusBody.children().remove();
+
+                let data = `<tr><td>${value.customer_id}</td><td>${value.name}</td><td>${value.address}</td><td>${value.nic}</td><td>${value.email}</td><td>${value.tel}</td></tr>`;
+                cusBody.append(data);
+            }
+        });
+    } else {
+        setAlert('error','Invalid Customer ID !!');
+    }
+});
+
+const validationCustomerInput = () => {
+    if (NAME.test(cusName.val())){
+        if (cusAddress.val() !== "") {
+            if (NIC.test(cusNic.val())) {
+                if (EMAIL.test(cusEmail.val())){
+                    if (TEL.test(cusTel.val())) {
+                        return true;
+                    } else {
+                        setAlert('error','Invalid Telephone Number !!');
+                    }
+                } else {
+                    setAlert('error','Invalid Email !!');
+                }
+            } else {
+                setAlert('error','Invalid NIC !!');
+            }
+        } else {
+            setAlert('error','Invalid Address !!');
+        }
+    } else {
+        setAlert('error','Invalid Name !!');
+    }
+    return false;
+}
