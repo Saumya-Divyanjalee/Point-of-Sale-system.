@@ -46,7 +46,7 @@ class SpicyStopApp {
             const password = document.getElementById('password').value;
 
             // Spicy Stop Admin Credentials
-            if (username === 'admin' && password === 'spicy123') {
+            if (username === 'admin' && password === '123') {
                 this.showLoginSuccess();
             } else {
                 this.showLoginError();

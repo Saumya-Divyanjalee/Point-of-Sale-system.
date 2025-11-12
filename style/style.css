@@ -23,7 +23,8 @@
 body {
     background: linear-gradient(135deg, var(--light) 0%, var(--accent) 100%);
     /* Changed font-family to Roboto Slab */
-    font-family: 'Roboto Slab', serif;
+    font-family: "Roboto Slab", serif;
+    font-optical-sizing: auto;
     color: var(--primary);
     overflow-x: hidden;
 }
@@ -92,7 +93,7 @@ body {
 .logo {
     width: 120px;
     height: 120px;
-    background: var(--spicy-red);
+    background: #DB0045;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -114,7 +115,8 @@ body {
 }
 
 .brand-name {
-    font-family: 'Playfair Display', serif;
+    font-family: "Roboto Slab", serif;
+    font-optical-sizing: auto;
     font-size: 2.2rem;
     color: var(--primary);
     margin-bottom: 0.5rem;
@@ -135,7 +137,8 @@ body {
     transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.8);
     width: 100%; /* Ensure full width on mobile */
-    font-family: 'Roboto Slab', serif; /* Use Roboto Slab in forms */
+    font-family: "Roboto Slab", serif;
+    font-optical-sizing: auto;
 }
 
 .form-control:focus, .form-select:focus {
@@ -309,7 +312,8 @@ body {
 }
 
 .page-title {
-    font-family: 'Playfair Display', serif;
+    font-family: "Roboto Slab", serif;
+    font-optical-sizing: auto;
     font-size: 2.5rem;
     color: var(--primary);
     margin-bottom: 0.5rem;
@@ -354,7 +358,8 @@ body {
 }
 
 .card-title {
-    font-family: 'Playfair Display', serif;
+    font-family: "Roboto Slab", serif;
+    font-optical-sizing: auto;
     color: var(--primary);
     margin-bottom: 1rem;
     font-size: 1.5rem;
@@ -570,7 +575,8 @@ body {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--secondary);
-    font-family: 'Playfair Display', serif;
+    font-family: "Roboto Slab", serif;
+    font-optical-sizing: auto;
 }
 
 /* --- HOT RED PLACE ORDER BUTTON --- */
@@ -658,7 +664,8 @@ body {
     font-size: 2rem;
     font-weight: 700;
     color: var(--primary);
-    font-family: 'Playfair Display', serif;
+    font-family: "Roboto Slab", serif;
+    font-optical-sizing: auto;
 }
 
 .stat-label {
