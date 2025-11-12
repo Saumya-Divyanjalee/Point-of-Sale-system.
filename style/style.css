@@ -1,4 +1,5 @@
 :root {
+    scroll-behavior: smooth;
     --primary: #2c1a0d;
     --secondary: #d4a574; /* Earthy Gold/Brown */
     --accent: #f5e6d3; /* Off-White/Cream */
@@ -230,7 +231,7 @@ body {
     display: flex;
     align-items: center;
     padding: 1rem 1.5rem;
-    color: var(--accent);
+    color: white;
     border-radius: 15px;
     transition: all 0.3s ease;
     font-weight: 500;
@@ -248,7 +249,7 @@ body {
 
 .nav-link:hover, .nav-link.active {
     background: rgba(212, 165, 116, 0.2);
-    color: var(--secondary);
+    color: white;
     transform: translateX(5px);
 }
 

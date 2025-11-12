@@ -71,7 +71,7 @@ class SpicyStopApp {
             errorMsg.style.display = 'block';
             setTimeout(() => errorMsg.style.display = 'none', 3000);
         } else {
-            alert('Invalid credentials! Try: admin / spicy123');
+            alert('Invalid credentials! Try: admin / 123');
         }
     }
 

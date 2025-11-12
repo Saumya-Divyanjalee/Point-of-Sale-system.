@@ -26,7 +26,7 @@ export class ItemModel {
             name,
             price,
             stock,
-            'https://media.gettyimages.com/id/164646124/photo/burning-chili-pepper-fire-flame.jpg?s=612x612&w=0&k=20&c=80CoHWcjAd_u7t4Pzob3_1z2W04X5Poe_dCWX4LcD3M='
+            'https://i.pinimg.com/736x/eb/89/83/eb89831ceceb49408db4a30c493adfd9.jpg'
         );
         items.push(newItem);
         this.saveAll(items);
