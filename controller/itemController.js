@@ -1,124 +1,229 @@
 // controller/ItemController.js
+// Mediates between the Item form/table in the UI and ItemModel.
+// Reads user input, delegates to the model, then refreshes the view.
+
 import { ItemModel } from '../model/ItemModel.js';
-import { ItemDTO } from '../dto/ItemDTO.js';
+import { ItemDTO }   from '../dto/ItemDTO.js';
 
 export class ItemController {
-    constructor() {
-        this.editingItemId = null;
-        this.itemsTableBody = document.getElementById('itemsTable');
-        this.updateBtn = document.getElementById('updateBtn');
-        this.deleteBtn = document.getElementById('deleteBtn');
 
-        this.setupFormListeners();
+    constructor() {
+        // ID of the item currently loaded in the edit form, or null.
+        this.editingItemId = null;
+
+        // Cached DOM references - avoids repeated getElementById calls.
+        this.itemsTableBody = document.getElementById('itemsTable');
+        this.updateBtn      = document.getElementById('updateBtn');
+        this.deleteBtn      = document.getElementById('deleteBtn');
+
+        this._bindFormButtons();
     }
 
-    setupFormListeners() {
-        document.querySelector('#item-management .btn-add').onclick = () => this.addMenuItem();
+    // ------------------------------------------------------------------
+    // Button wiring
+    // ------------------------------------------------------------------
+
+    _bindFormButtons() {
+        document.querySelector('#item-management .btn-add').onclick   = () => this.addMenuItem();
+        document.querySelector('#item-management .btn-clear').onclick = () => this.clearItemForm();
         this.updateBtn.onclick = () => this.updateMenuItem();
         this.deleteBtn.onclick = () => this.deleteMenuItem();
-        document.querySelector('#item-management .btn-clear').onclick = () => this.clearItemForm();
     }
 
+    // ------------------------------------------------------------------
+    // Table rendering
+    // ------------------------------------------------------------------
+
+    // Render all menu items into the items table.
     loadMenuItems() {
         const items = ItemModel.getAll();
         this.itemsTableBody.innerHTML = '';
 
+        if (items.length === 0) {
+            this.itemsTableBody.innerHTML =
+                '<tr><td colspan="7" class="text-center py-4 text-muted">No menu items yet. Add one above.</td></tr>';
+            if (window.app) window.app.updateDashboardItemsCount(0);
+            return;
+        }
+
         items.forEach(item => {
-            const tr = document.createElement('tr');
-            const statusClass = item.stock < 10 ? 'low-stock' : '';
-            const statusText = item.stock > 0
-                ? '<span class="badge" style="background: rgba(74, 124, 89, 0.2); color: var(--success);">Available</span>'
-                : '<span class="badge badge-unpaid">Out of Stock</span>';
+            const tr          = document.createElement('tr');
+            const isLowStock  = item.stock > 0 && item.stock < 10;
+            const isOutStock  = item.stock === 0;
+
+            const stockClass  = isLowStock ? 'low-stock' : '';
+            const statusBadge = isOutStock
+                ? '<span class="badge badge-unpaid">Out of Stock</span>'
+                : '<span class="badge badge-paid">Available</span>';
 
             tr.innerHTML = `
                 <td>${item.id}</td>
-                <td><strong>${item.name}</strong></td>
+                <td><strong>${this._escape(item.name)}</strong></td>
                 <td>LKR ${item.price.toFixed(2)}</td>
-                <td class="${statusClass}">${item.stock}</td>
-                <td>${statusText}</td>
+                <td class="${stockClass}">${item.stock}</td>
+                <td>${item.category || '-'}</td>
+                <td>${statusBadge}</td>
                 <td>
-                    <button class="btn btn-sm btn-edit" onclick="itemController.editMenuItem('${item.id}')">
+                    <button class="btn btn-sm btn-edit"
+                            onclick="itemController.editMenuItem('${item.id}')"
+                            title="Edit item">
                         <i class="fas fa-edit"></i>
                     </button>
                 </td>
             `;
             this.itemsTableBody.appendChild(tr);
         });
+
         if (window.app) window.app.updateDashboardItemsCount(items.length);
     }
 
-    addMenuItem() {
-        const name = document.getElementById('itemName').value.trim();
-        const price = parseFloat(document.getElementById('itemPrice').value);
-        const stock = parseInt(document.getElementById('itemStock').value);
+    // ------------------------------------------------------------------
+    // CRUD operations
+    // ------------------------------------------------------------------
 
-        if (!name || isNaN(price) || isNaN(stock) || price < 0 || stock < 0) {
-            alert('Please ensure all fields are filled and valid.');
+    addMenuItem() {
+        const name  = document.getElementById('itemName').value.trim();
+        const price = parseFloat(document.getElementById('itemPrice').value);
+        const stock = parseInt(document.getElementById('itemStock').value, 10);
+
+        const result = ItemModel.create(name, price, stock);
+
+        if (!result.success) {
+            this._showError(result.error);
             return;
         }
 
-        ItemModel.create(name, price, stock);
         this.loadMenuItems();
         this.clearItemForm();
-        alert('Menu item added successfully!');
+        this._showSuccess('Menu item added successfully.');
     }
 
+    // Load an item's data into the form for editing.
     editMenuItem(id) {
         const item = ItemModel.getById(id);
-        if (item) {
-            this.editingItemId = id;
-            document.getElementById('itemIdDisplay').value = item.id;
-            document.getElementById('itemName').value = item.name;
-            document.getElementById('itemPrice').value = item.price;
-            document.getElementById('itemStock').value = item.stock;
-
-            this.updateBtn.style.display = 'inline-block';
-            this.deleteBtn.style.display = 'inline-block';
+        if (!item) {
+            this._showError('Item not found.');
+            return;
         }
+
+        this.editingItemId = id;
+        document.getElementById('itemIdDisplay').value = item.id;
+        document.getElementById('itemName').value      = item.name;
+        document.getElementById('itemPrice').value     = item.price;
+        document.getElementById('itemStock').value     = item.stock;
+
+        // Show Update and Delete buttons; the Add button remains visible
+        // but its action is guarded by editingItemId being null.
+        this.updateBtn.style.display = 'inline-block';
+        this.deleteBtn.style.display = 'inline-block';
+
+        // Scroll form into view on small screens
+        document.getElementById('itemIdDisplay').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     updateMenuItem() {
         if (!this.editingItemId) return;
 
         const currentItem = ItemModel.getById(this.editingItemId);
-        const updatedItem = new ItemDTO(
+        if (!currentItem) {
+            this._showError('Item no longer exists. Please refresh.');
+            this.clearItemForm();
+            return;
+        }
+
+        const updatedDTO = new ItemDTO(
             this.editingItemId,
             document.getElementById('itemName').value.trim(),
             parseFloat(document.getElementById('itemPrice').value),
-            parseInt(document.getElementById('itemStock').value),
-            currentItem.image
+            parseInt(document.getElementById('itemStock').value, 10),
+            currentItem.image,          // Preserve existing image
+            currentItem.category        // Preserve existing category
         );
 
-        if (ItemModel.update(updatedItem)) {
-            this.loadMenuItems();
-            this.clearItemForm();
-            alert('Menu item updated!');
+        const result = ItemModel.update(updatedDTO);
+
+        if (!result.success) {
+            this._showError(result.error);
+            return;
         }
+
+        this.loadMenuItems();
+        this.clearItemForm();
+        this._showSuccess('Menu item updated.');
     }
 
     deleteMenuItem() {
         if (!this.editingItemId) return;
 
-        if (confirm('Are you sure you want to delete this item?')) {
-            ItemModel.delete(this.editingItemId);
-            this.loadMenuItems();
-            this.clearItemForm();
-            alert('Menu item deleted!');
+        const item = ItemModel.getById(this.editingItemId);
+        const name = item ? `"${item.name}"` : 'this item';
+
+        if (!confirm(`Delete ${name}? This cannot be undone.`)) return;
+
+        const result = ItemModel.delete(this.editingItemId);
+
+        if (!result.success) {
+            this._showError(result.error);
+            return;
         }
+
+        this.loadMenuItems();
+        this.clearItemForm();
+        this._showSuccess('Menu item deleted.');
     }
+
+    // ------------------------------------------------------------------
+    // Form helpers
+    // ------------------------------------------------------------------
 
     clearItemForm() {
         this.editingItemId = null;
-        document.getElementById('editItemId').value = '';
         document.getElementById('itemIdDisplay').value = '';
-        document.getElementById('itemName').value = '';
-        document.getElementById('itemPrice').value = '';
-        document.getElementById('itemStock').value = '';
+        document.getElementById('itemName').value      = '';
+        document.getElementById('itemPrice').value     = '';
+        document.getElementById('itemStock').value     = '';
         this.updateBtn.style.display = 'none';
         this.deleteBtn.style.display = 'none';
+        this._clearMessages();
     }
 
+    // Returns all items - used by OrderController and the POS view.
     getAllItems() {
         return ItemModel.getAll();
+    }
+
+    // ------------------------------------------------------------------
+    // Private helpers
+    // ------------------------------------------------------------------
+
+    // Escape HTML special chars to prevent XSS when injecting user data.
+    _escape(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    _showError(message) {
+        this._showBanner('itemFormMsg', message, 'error');
+    }
+
+    _showSuccess(message) {
+        this._showBanner('itemFormMsg', message, 'success');
+    }
+
+    _showBanner(elId, message, type) {
+        let el = document.getElementById(elId);
+        if (!el) return;
+        el.textContent  = message;
+        el.className    = `form-msg form-msg-${type}`;
+        el.style.display = 'block';
+        setTimeout(() => { if (el) el.style.display = 'none'; }, 4000);
+    }
+
+    _clearMessages() {
+        const el = document.getElementById('itemFormMsg');
+        if (el) el.style.display = 'none';
     }
 }
